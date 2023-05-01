@@ -13,3 +13,6 @@ frontend.zip
 backend.zip
 dist/*
 venv/
+pynecone.db
+.web
+
