@@ -1,68 +1,6 @@
-"""Welcome to Pynecone! This file outlines the steps to create a basic app."""
-# import openai
-
 import pynecone as pc
-from webui.components.loading_icon import loading_icon
-
-from webui.styles import *
-from webui.utils import navbar, sidebar
-
-# openai.api_key = "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"
-
-
-class State(pc.State):
-    """The app state."""
-
-    chats: dict[str, list[dict[str, str]]] = {
-        "Intros": [{"question": "What is your name?", "answer": "Pynecone"}],
-        "History paper": [{"question": "What is your age?", "answer": "1"}],
-    }
-    models: list[str] = ["Model1", "Model2", "Model3"]
-    question: str
-    current_chat = "Intros"
-    current_model = "Model1"
-    processing: bool = False
-    show: bool = False
-    new_chat_name: str = ""
-    drawer_open: bool = False
-
-    def create_chat(self):
-        self.chats[self.new_chat_name] = []
-        self.current_chat = self.new_chat_name
-        self.change()
-
-    def change(self):
-        self.show = not (self.show)
-
-    def toggle_processing(self):
-        self.processing = not self.processing
-
-    def set_chat(self, chat_id: str):
-        self.current_chat = chat_id
-
-    @pc.var
-    def chat_title(self) -> list[str]:
-        return list(self.chats.keys())
-
-    def process_question(self):
-        print(self.question)
-        # response = openai.Completion.create(
-        #     model="text-davinci-002",
-        #     prompt=self.question,
-        #     temperature=0,
-        #     max_tokens=200,
-        #     top_p=1,
-        # )
-        # answer = response["choices"][0]["text"].replace("\n", "")
-        answer = "Hello, I am Pynecone."
-        self.chats[self.current_chat].append(
-            {"question": self.question, "answer": answer}
-        )
-        self.chats = self.chats
-        self.toggle_processing()
-
-    def toggle_drawer(self):
-        self.drawer_open = not self.drawer_open
+from webui.components import loading_icon, modal, navbar
+from webui.state import State
 
 
 def message(qa):
@@ -115,13 +53,14 @@ def action_bar(State):
                 pc.input(
                     placeholder="Type something...",
                     on_blur=State.set_question,
-                    resize="none",
                     bg="#222",
                     border_color="#fff3",
                     _placeholder={"color": "#fffa"},
                 ),
                 pc.button(
-                    "Send",
+                    pc.cond(
+                        State.processing, loading_icon(height="1em"), pc.text("Send")
+                    ),
                     on_click=[State.toggle_processing, State.process_question],
                     bg="#222",
                     color="#fff",
@@ -208,6 +147,7 @@ def index() -> pc.Component:
         chat(State),
         action_bar(State),
         drawer(State),
+        modal(State),
         bg="#111",
         color="#fff",
         min_h="100vh",
