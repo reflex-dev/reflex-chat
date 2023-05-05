@@ -52,7 +52,7 @@ class State(pc.State):
         #     top_p=1,
         # )
         # answer = response["choices"][0]["text"].replace("\n", "")
-        time.sleep(5)
+        time.sleep(0.2)
         answer = "Hello there!"
         self.chats[self.current_chat].append(
             {"question": self.question, "answer": answer}
