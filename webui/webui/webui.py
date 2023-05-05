@@ -1,26 +1,30 @@
 """Welcome to Pynecone! This file outlines the steps to create a basic app."""
+# import openai
+
 import pynecone as pc
-from .utils import navbar, sidebar
-from .styles import *
+from webui.components.loading_icon import loading_icon
 
-import openai
+from webui.styles import *
+from webui.utils import navbar, sidebar
 
-openai.api_key = "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"
+# openai.api_key = "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"
 
 
 class State(pc.State):
     """The app state."""
+
     chats: dict[str, list[dict[str, str]]] = {
-        "Chat1": [{"question": "What is your name?", "answer": "Pynecone"}],
-        "Chat2": [{"question": "What is your age?", "answer": "1"}],
+        "Intros": [{"question": "What is your name?", "answer": "Pynecone"}],
+        "History paper": [{"question": "What is your age?", "answer": "1"}],
     }
     models: list[str] = ["Model1", "Model2", "Model3"]
     question: str
-    current_chat = "Chat1"
+    current_chat = "Intros"
     current_model = "Model1"
     processing: bool = False
     show: bool = False
     new_chat_name: str = ""
+    drawer_open: bool = False
 
     def create_chat(self):
         self.chats[self.new_chat_name] = []
@@ -42,149 +46,173 @@ class State(pc.State):
 
     def process_question(self):
         print(self.question)
-        response = openai.Completion.create(
-            model="text-davinci-002",
-            prompt=self.question,
-            temperature=0,
-            max_tokens=200,
-            top_p=1,
-        )
-        answer = response["choices"][0]["text"].replace("\n", "")
+        # response = openai.Completion.create(
+        #     model="text-davinci-002",
+        #     prompt=self.question,
+        #     temperature=0,
+        #     max_tokens=200,
+        #     top_p=1,
+        # )
+        # answer = response["choices"][0]["text"].replace("\n", "")
+        answer = "Hello, I am Pynecone."
         self.chats[self.current_chat].append(
             {"question": self.question, "answer": answer}
         )
         self.chats = self.chats
         self.toggle_processing()
 
+    def toggle_drawer(self):
+        self.drawer_open = not self.drawer_open
 
-def show_chat(qa):
+
+def message(qa):
+    message_style = dict(
+        display="inline-block",
+        p="4",
+        border_radius="xl",
+    )
     return pc.box(
         pc.box(
             pc.text(
                 qa["question"],
-                bg=accent_color,
-                border="0.1em solid rgba(234,234,234, 1)",
-                display="inline-block",
-                padding=".75em",
-                border_radius="5px",
-            ),
-            text_align="left",
-        ),
-        pc.box(
-            pc.text(
-                qa["answer"],
-                bg=green_color,
-                color="white",
-                display="inline-block",
-                padding=".75em",
-                border_radius="5px",
+                bg="#fff3",
+                **message_style,
             ),
             text_align="right",
             margin_top="1em",
         ),
+        pc.box(
+            pc.text(
+                qa["answer"],
+                bg="#5535d4",
+                **message_style,
+            ),
+            text_align="left",
+        ),
         width="100%",
     )
 
 
-class LoadingIcon(pc.Component):
-    library = "react-loading-icons"
-    tag = "ThreeDots"
-    stroke: pc.Var[str]
-    stroke_opacity: pc.Var[str]
-    fill: pc.Var[str]
-    fill_opacity: pc.Var[str]
-    stroke_width: pc.Var[str]
-    speed: pc.Var[str]
+def chat(State):
+    return pc.vstack(
+        pc.box(pc.foreach(State.chats[State.current_chat], message)),
+        py="8",
+        align_items="stretch",
+        class_name="hello",
+        justify_content="space-between",
+        flex="1",
+        width="100%",
+        max_w="3xl",
+        align_self="center",
+        overflow="hidden",
+    )
 
-    @classmethod
-    def get_controlled_triggers(cls) -> dict[str, pc.Var]:
-        return {"on_change": pc.EVENT_ARG}
-loading_icon = LoadingIcon.create
 
-def middle(State):
-    return pc.flex(
-        pc.hstack(
-            pc.heading(State.current_chat, text_align="left"),
-            pc.spacer(),
-            pc.box(
-                pc.icon(tag="edit"),
-                padding = ".5em",
-                border = "0.1em solid rgba(234,234,234, 1)",
-                border_radius="5px",
-            ),
-            pc.box(
-                pc.icon(tag="delete"),
-                padding = ".5em",
-                border = "0.1em solid rgba(234,234,234, 1)",
-                border_radius="5px",
-            ),
-            width = "100%",
-            padding_bottom = "1em",
-        ),
-        pc.divider(),
+def action_bar(State):
+    return pc.box(
         pc.vstack(
-            pc.foreach(State.chats[State.current_chat], show_chat),
-            padding_y="1em",
-            spacing="1em",
-            max_height = "100%",
-            overflow_y = "scroll",
-        ),
-        pc.spacer(),
-        pc.cond(
-            State.processing,
-            pc.center(
-                loading_icon(
-                    stroke=green_color,
-                    fill=green_color,
-                    stroke_width="1.5em",
-                    speed=".5",
-                    height="1em",
-                ),
-                padding_y="1em",
-            )
-        ),
-        pc.vstack(
-            pc.divider(),
             pc.hstack(
-                pc.icon(tag="edit"),
-                pc.icon(tag="edit"),
-                pc.icon(tag="edit"),
-                pc.icon(tag="edit"),
-
-            ),
-            pc.input_group(
                 pc.input(
-                    id="input1",
                     placeholder="Type something...",
                     on_blur=State.set_question,
+                    resize="none",
+                    bg="#222",
+                    border_color="#fff3",
+                    _placeholder={"color": "#fffa"},
                 ),
-                pc.input_right_addon(
-                    pc.icon(tag="arrow_right"),
+                pc.button(
+                    "Send",
                     on_click=[State.toggle_processing, State.process_question],
-                    bg="white",
+                    bg="#222",
+                    color="#fff",
+                    p="4",
+                    _hover={"bg": "#5535d4", "color": "#fff"},
                 ),
             ),
-            pc.text("This is a chat app that lets you chat with other users."),
+            pc.text(
+                "PyneconeGPT may return factually incorrect or misleading responses. Use discretion.",
+                font_size="xs",
+                color="#fff6",
+                text_align="center",
+            ),
+            width="100%",
+            max_w="3xl",
+            mx="auto",
+            align_items="stretch",
         ),
-        position="fixed",
-        height="100%",
-        top="0px",
-        z_index=1,
-        padding_left=["2em", "2em", "2em", "25em", "25em"],
-        padding_right=["2em", "2em", "2em", "5em", "5em"],
+        position="sticky",
+        bottom="0",
+        left="0",
+        py="4",
+        backdrop_filter="auto",
+        backdrop_blur="lg",
+        align_items="stretch",
         width="100%",
-        padding_top="8em",
-        padding_bottom="5em",
-        text_align="center",
-        flex_direction="column",
-        bg="white",
+        bg="#1113",
+    )
+
+
+def navigate_chat(State, chat):
+    return pc.box(
+        chat,
+        on_click=[State.set_chat(chat), State.toggle_drawer],
+        bg="#222",
+        color="#fff",
+        p="4",
+        border="1px solid #fff3",
+        border_radius="lg",
+        display="block",
+        cursor="pointer",
+    )
+
+
+def drawer(State):
+    return pc.drawer(
+        pc.drawer_overlay(
+            pc.drawer_content(
+                pc.drawer_header(
+                    pc.hstack(
+                        pc.text("Chats"),
+                        pc.icon(
+                            tag="close",
+                            font_size="sm",
+                            on_click=State.toggle_drawer,
+                            color="#fff8",
+                            _hover={"color": "#fff"},
+                            cursor="pointer",
+                        ),
+                        align_items="center",
+                        justify_content="space-between",
+                    )
+                ),
+                pc.drawer_body(
+                    pc.vstack(
+                        pc.foreach(
+                            State.chat_title, lambda chat: navigate_chat(State, chat)
+                        ),
+                        align_items="stretch",
+                    )
+                ),
+                bg="#222",
+                color="#fff",
+            ),
+        ),
+        placement="left",
+        is_open=State.drawer_open,
     )
 
 
 def index() -> pc.Component:
-    return pc.center(
+    return pc.vstack(
         navbar(State),
-        pc.hstack(sidebar(State), middle(State), width="100%", padding_top="5em"),
+        chat(State),
+        action_bar(State),
+        drawer(State),
+        bg="#111",
+        color="#fff",
+        min_h="100vh",
+        align_items="stretch",
+        spacing="0",
     )
 
 

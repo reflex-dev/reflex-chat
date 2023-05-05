@@ -1,40 +1,76 @@
 import pynecone as pc
+
 from .styles import *
 
 
 def navbar(State):
-    """The navbar."""
     return pc.box(
         pc.hstack(
-            pc.link(
-                pc.hstack(pc.image(src="favicon.ico"), pc.heading("ChatGPT Web")),
-                href="/",
-            ),
-            pc.menu(
-                pc.menu_button(
-                    pc.avatar(name="Test", size="md", bg = "black", color = "white"),
-                    pc.box(),
+            pc.hstack(
+                pc.icon(
+                    tag="hamburger",
+                    mr=4,
+                    on_click=State.toggle_drawer,
+                    cursor="pointer",
                 ),
-                pc.menu_list(
-                    pc.menu_item("Help"),
-                    pc.link(
-                        pc.menu_item("Resources"),
-                        href="/",
+                pc.link(
+                    pc.box(
+                        pc.image(src="favicon.ico", width=30, height="auto"),
+                        p="1",
+                        border_radius="6",
+                        bg="#F0F0F0",
+                        mr="2",
                     ),
-                    pc.menu_divider(),
-                    pc.menu_item("Settings"),
+                    href="/",
                 ),
+                pc.breadcrumb(
+                    pc.breadcrumb_item(
+                        pc.heading("PyneconeGPT", size="sm"),
+                    ),
+                    pc.breadcrumb_item(
+                        pc.text(State.current_chat, size="sm", font_weight="normal"),
+                    ),
+                ),
+            ),
+            pc.hstack(
+                pc.button(
+                    "+ New chat",
+                    bg="#5535d4",
+                    box_shadow="md",
+                    px="4",
+                    py="2",
+                    h="auto",
+                    _hover={"bg": "#4c2db3"},
+                ),
+                pc.menu(
+                    pc.menu_button(
+                        pc.avatar(name="User", size="sm", bg="#333", color="white"),
+                        pc.box(),
+                    ),
+                    pc.menu_list(
+                        pc.menu_item(
+                            "Help", _hover={"bg": "#fff3"}, _focus={"bg": "#fff3"}
+                        ),
+                        pc.menu_divider(border_color="#fff3"),
+                        pc.menu_item(
+                            "Settings", _hover={"bg": "#fff3"}, _focus={"bg": "#fff3"}
+                        ),
+                        bg="#111",
+                        border_color="#fff3",
+                    ),
+                ),
+                spacing="8",
             ),
             justify="space-between",
-            border_bottom="0.2em solid #F0F0F0",
-            padding_x="2em",
-            padding_y="1em",
-            bg="rgba(255,255,255, 1)",
         ),
-        position="fixed",
-        width="100%",
-        top="0px",
-        z_index="3",
+        bg="#1114",
+        backdrop_filter="auto",
+        backdrop_blur="lg",
+        p="4",
+        border_bottom="1px solid #fff3",
+        position="sticky",
+        top="0",
+        z_index="100",
     )
 
 
@@ -42,24 +78,24 @@ def show_chat(State, chat):
     return pc.cond(
         State.current_chat == chat,
         pc.box(
-        pc.text(chat),
-        on_click=State.set_chat(chat),
-        padding="1em",
-        border_radius="5px",
-        width="100%",
-        border=f"0.15em solid {green_color}",
-        bg=accent_color,
-        shadow="lg"
-    ),
-    pc.box(
-        pc.text(chat),
-        on_click=State.set_chat(chat),
-        padding="1em",
-        border_radius="5px",
-        width="100%",
-        border="0.1em solid rgba(234,234,234, 1)",
-        bg=accent_color,
-    )
+            pc.text(chat),
+            on_click=State.set_chat(chat),
+            padding="1em",
+            border_radius="5px",
+            width="100%",
+            border=f"0.15em solid {green_color}",
+            bg=accent_color,
+            shadow="lg",
+        ),
+        pc.box(
+            pc.text(chat),
+            on_click=State.set_chat(chat),
+            padding="1em",
+            border_radius="5px",
+            width="100%",
+            border="0.1em solid rgba(234,234,234, 1)",
+            bg=accent_color,
+        ),
     )
 
 
@@ -93,53 +129,30 @@ def sidebar(State):
                 pc.spacer(),
                 pc.box(
                     pc.icon(tag="external_link", color=text_dark_color),
-                    padding=".5em",
-                    border="0.1em solid rgba(234,234,234, 1)",
-                    border_radius="5px",
                 ),
-                width = "100%",
             ),
-            width="20em",
-            padding_x="2em",
-            padding_y="1em",
-            padding_bottom="3em",
         ),
         pc.modal(
-        pc.modal_overlay(
-            pc.modal_content(
-                pc.modal_header("Create a new chat"),
-                pc.modal_body(
-                    pc.vstack(
-                        pc.input(
-                            placeholder="Chat Name",
-                            on_blur=State.set_new_chat_name,
-                        ),
-                        pc.select(
-                            State.models,
-                            on_change=State.set_current_model
+            pc.modal_overlay(
+                pc.modal_content(
+                    pc.modal_header("Create a new chat"),
+                    pc.modal_body(
+                        pc.vstack(
+                            pc.input(
+                                placeholder="Chat Name",
+                                on_blur=State.set_new_chat_name,
+                            ),
+                            pc.select(State.models, on_change=State.set_current_model),
                         )
-                    )
-                ),
-                pc.modal_footer(
-                    pc.hstack(
-                        pc.button(
-                            "Close", on_click=State.change
-                        ),
-                        pc.button(
-                            "Create Chat", on_click=State.create_chat
+                    ),
+                    pc.modal_footer(
+                        pc.hstack(
+                            pc.button("Close", on_click=State.change),
+                            pc.button("Create Chat", on_click=State.create_chat),
                         )
-                    )
-                ),
-            )
+                    ),
+                )
+            ),
+            is_open=State.show,
         ),
-        is_open=State.show,
-        ),
-        position="fixed",
-        z_index="2",
-        height="100%",
-        left="0px",
-        top="0px",
-        border_right="0.2em solid #F0F0F0",
-        padding_top="6em",
-        display=["none", "none", "none", "flex", "flex"]
     )
