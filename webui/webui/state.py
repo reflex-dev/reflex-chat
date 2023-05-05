@@ -60,5 +60,9 @@ class State(pc.State):
         self.chats = self.chats
         return self.toggle_processing()
 
+    def delete_chat(self):
+        del self.chats[self.current_chat]
+        self.current_chat = list(self.chats.keys())[0]
+
     def toggle_drawer(self):
         self.drawer_open = not self.drawer_open

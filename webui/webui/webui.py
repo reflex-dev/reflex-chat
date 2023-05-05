@@ -92,15 +92,26 @@ def action_bar(State):
 
 
 def navigate_chat(State, chat):
-    return pc.box(
-        chat,
-        on_click=[State.set_chat(chat), State.toggle_drawer],
+    return pc.hstack(
+        pc.box(
+            chat,
+            on_click=[State.set_chat(chat), State.toggle_drawer],
+            p="4",
+            border="1px solid #fff3",
+            border_radius="lg",
+            flex="1",
+        ),
+        pc.icon(
+            tag="delete",
+            font_size="sm",
+            color="#fff8",
+            w="8",
+            on_click=[State.delete_chat, State.toggle_drawer],
+        ),
         bg="#222",
         color="#fff",
-        p="4",
-        border="1px solid #fff3",
-        border_radius="lg",
-        display="block",
+        align_items="center",
+        justify_content="space-between",
         cursor="pointer",
     )
 
