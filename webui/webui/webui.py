@@ -85,6 +85,7 @@ def action_bar(State):
         py="4",
         backdrop_filter="auto",
         backdrop_blur="lg",
+        border_top="1px solid #fff1",
         align_items="stretch",
         width="100%",
         bg="#1113",

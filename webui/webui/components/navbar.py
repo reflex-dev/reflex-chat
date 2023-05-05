@@ -66,7 +66,7 @@ def navbar(State):
         backdrop_filter="auto",
         backdrop_blur="lg",
         p="4",
-        border_bottom="1px solid #fff3",
+        border_bottom="1px solid #fff1",
         position="sticky",
         top="0",
         z_index="100",
