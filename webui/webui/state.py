@@ -2,7 +2,7 @@ import time
 
 # import openai
 
-# openai.api_key = "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"
+# openai.api_key = "xxx"
 
 
 import pynecone as pc
