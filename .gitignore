@@ -11,5 +11,6 @@ bun.lockb
 poetry.lock
 frontend.zip
 backend.zip
+.vscode
 dist/*
 venv/
