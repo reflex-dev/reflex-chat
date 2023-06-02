@@ -8,9 +8,6 @@ class State(pc.State):
 
     chats: dict[str, list[dict[str, str]]] = {
         "Intros": [{"question": "What is your name?", "answer": "Pynecone"}],
-        "GPT-3": [{"question": "What is your name?", "answer": "Pynecone"}],
-        "GPT-2": [{"question": "What is your name?", "answer": "Pynecone"}],
-        "GPT-J": [{"question": "What is your name?", "answer": "Pynecone"}],
     }
     question: str
     current_chat = "Intros"
