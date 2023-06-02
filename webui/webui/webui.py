@@ -1,19 +1,15 @@
 import pynecone as pc
 from webui.components import loading_icon, modal, navbar
 from webui.state import State
-
+from webui.styles import *
 
 def message(qa):
-    message_style = dict(
-        display="inline-block",
-        p="4",
-        border_radius="xl",
-    )
     return pc.box(
         pc.box(
             pc.text(
                 qa["question"],
-                bg="#fff3",
+                bg=border_color,
+                shadow=shadow_light,
                 **message_style,
             ),
             text_align="right",
@@ -22,10 +18,12 @@ def message(qa):
         pc.box(
             pc.text(
                 qa["answer"],
-                bg="#5535d4",
+                bg=accent_color,
+                shadow=shadow_light,
                 **message_style,
             ),
             text_align="left",
+            padding_top="1em",
         ),
         width="100%",
     )
@@ -35,38 +33,43 @@ def chat(State):
     return pc.vstack(
         pc.box(pc.foreach(State.chats[State.current_chat], message)),
         py="8",
-        align_items="stretch",
-        class_name="hello",
-        justify_content="space-between",
         flex="1",
         width="100%",
         max_w="3xl",
+        padding_x="4",
         align_self="center",
         overflow="hidden",
+        padding_bottom="5em",
+
     )
 
 
 def action_bar(State):
     return pc.box(
         pc.vstack(
-            pc.hstack(
-                pc.input(
-                    placeholder="Type something...",
-                    on_blur=State.set_question,
-                    bg="#222",
-                    border_color="#fff3",
-                    _placeholder={"color": "#fffa"},
-                ),
-                pc.button(
-                    pc.cond(
-                        State.processing, loading_icon(height="1em"), pc.text("Send")
+            pc.form(
+                pc.form_control(
+                pc.hstack(
+                    pc.input(
+                        placeholder="Type something...",
+                        id="question",
+                        _placeholder={"color": "#fffa"},
+                        _hover={"border_color": accent_color},
+                        style=input_style,
                     ),
-                    on_click=[State.toggle_processing, State.process_question],
-                    bg="#222",
-                    color="#fff",
-                    p="4",
-                    _hover={"bg": "#5535d4", "color": "#fff"},
+                    pc.button(
+                        pc.cond(
+                            State.processing, loading_icon(height="1em"), pc.text("Send")
+                        ),
+                        type_="submit",
+                        _hover={"bg": accent_color},
+                        style=input_style
+                    ),
                 ),
+                is_disabled=State.processing,
+                ),
+                on_submit=[State.process_question, pc.set_value("question", "")],
+                width="100%",
             ),
             pc.text(
                 "PyneconeGPT may return factually incorrect or misleading responses. Use discretion.",
@@ -77,7 +80,6 @@ def action_bar(State):
             width="100%",
             max_w="3xl",
             mx="auto",
-            align_items="stretch",
         ),
         position="sticky",
         bottom="0",
@@ -85,34 +87,29 @@ def action_bar(State):
         py="4",
         backdrop_filter="auto",
         backdrop_blur="lg",
-        border_top="1px solid #fff1",
+        border_top=f"1px solid {border_color}",
         align_items="stretch",
         width="100%",
-        bg="#1113",
     )
-
 
 def navigate_chat(State, chat):
     return pc.hstack(
         pc.box(
             chat,
-            on_click=[State.set_chat(chat), State.toggle_drawer],
-            p="4",
-            border="1px solid #fff3",
-            border_radius="lg",
+            on_click=State.set_chat(chat),
+            style= sidebar_style,
+            color=icon_color,
             flex="1",
         ),
-        pc.icon(
-            tag="delete",
-            font_size="sm",
-            color="#fff8",
-            w="8",
-            on_click=[State.delete_chat, State.toggle_drawer],
+        pc.box(
+            pc.icon(
+                tag="delete",
+                style=icon_style,
+                on_click=[State.delete_chat],
+            ),
+            style= sidebar_style,
         ),
-        bg="#222",
-        color="#fff",
-        align_items="center",
-        justify_content="space-between",
+        color=text_light_color,
         cursor="pointer",
     )
 
@@ -126,14 +123,9 @@ def drawer(State):
                         pc.text("Chats"),
                         pc.icon(
                             tag="close",
-                            font_size="sm",
                             on_click=State.toggle_drawer,
-                            color="#fff8",
-                            _hover={"color": "#fff"},
-                            cursor="pointer",
+                            style = icon_style,
                         ),
-                        align_items="center",
-                        justify_content="space-between",
                     )
                 ),
                 pc.drawer_body(
@@ -144,8 +136,6 @@ def drawer(State):
                         align_items="stretch",
                     )
                 ),
-                bg="#222",
-                color="#fff",
             ),
         ),
         placement="left",
@@ -160,8 +150,8 @@ def index() -> pc.Component:
         action_bar(State),
         drawer(State),
         modal(State),
-        bg="#111",
-        color="#fff",
+        bg=bg_dark_color,
+        color=text_light_color,
         min_h="100vh",
         align_items="stretch",
         spacing="0",
@@ -169,6 +159,6 @@ def index() -> pc.Component:
 
 
 # Add state and page to the app.
-app = pc.App(state=State)
+app = pc.App(state=State, style=base_style)
 app.add_page(index)
 app.compile()
