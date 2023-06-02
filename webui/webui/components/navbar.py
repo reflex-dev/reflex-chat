@@ -1,6 +1,7 @@
 import pynecone as pc
 from webui.styles import *
 
+
 def navbar(State):
     return pc.box(
         pc.hstack(

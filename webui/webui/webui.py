@@ -3,6 +3,7 @@ from webui.components import loading_icon, modal, navbar
 from webui.state import State
 from webui.styles import *
 
+
 def message(qa):
     return pc.box(
         pc.box(
@@ -40,7 +41,6 @@ def chat(State):
         align_self="center",
         overflow="hidden",
         padding_bottom="5em",
-
     )
 
 
@@ -49,24 +49,26 @@ def action_bar(State):
         pc.vstack(
             pc.form(
                 pc.form_control(
-                pc.hstack(
-                    pc.input(
-                        placeholder="Type something...",
-                        id="question",
-                        _placeholder={"color": "#fffa"},
-                        _hover={"border_color": accent_color},
-                        style=input_style,
-                    ),
-                    pc.button(
-                        pc.cond(
-                            State.processing, loading_icon(height="1em"), pc.text("Send")
+                    pc.hstack(
+                        pc.input(
+                            placeholder="Type something...",
+                            id="question",
+                            _placeholder={"color": "#fffa"},
+                            _hover={"border_color": accent_color},
+                            style=input_style,
                         ),
-                        type_="submit",
-                        _hover={"bg": accent_color},
-                        style=input_style
+                        pc.button(
+                            pc.cond(
+                                State.processing,
+                                loading_icon(height="1em"),
+                                pc.text("Send"),
+                            ),
+                            type_="submit",
+                            _hover={"bg": accent_color},
+                            style=input_style,
+                        ),
                     ),
-                ),
-                is_disabled=State.processing,
+                    is_disabled=State.processing,
                 ),
                 on_submit=[State.process_question, pc.set_value("question", "")],
                 width="100%",
@@ -92,12 +94,13 @@ def action_bar(State):
         width="100%",
     )
 
+
 def navigate_chat(State, chat):
     return pc.hstack(
         pc.box(
             chat,
             on_click=State.set_chat(chat),
-            style= sidebar_style,
+            style=sidebar_style,
             color=icon_color,
             flex="1",
         ),
@@ -107,7 +110,7 @@ def navigate_chat(State, chat):
                 style=icon_style,
                 on_click=[State.delete_chat],
             ),
-            style= sidebar_style,
+            style=sidebar_style,
         ),
         color=text_light_color,
         cursor="pointer",
@@ -124,7 +127,7 @@ def drawer(State):
                         pc.icon(
                             tag="close",
                             on_click=State.toggle_drawer,
-                            style = icon_style,
+                            style=icon_style,
                         ),
                     )
                 ),
