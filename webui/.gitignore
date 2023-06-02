@@ -1,4 +1,5 @@
 *.py[cod]
 pynecone.db
 .web
+.vscode
 __pycache__/
