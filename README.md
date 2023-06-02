@@ -8,6 +8,11 @@ A user-friendly, highly customizable Python web app designed to demonstrate LLMs
 
 ## 🏃‍♂️ Getting Started
 
+### 1. Clone the Repo
+
+```
+git clone https://github.com/pynecone-io/pynecone-chat.git
+```
 ### 📦 1. Install Pynecone
 To get started with Pynecone, you'll need:
 
@@ -22,7 +27,7 @@ $ pip install pynecone
 Navigate to the llm-web-ui directory, initialize and run the app:
 
 ```
-$ cd llm-web-ui
+$ cd pynecone-chat/webui
 $ pc init
 $ pc run
 ```
