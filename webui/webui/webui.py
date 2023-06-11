@@ -1,14 +1,25 @@
+"""The main Chat app."""
+
 import pynecone as pc
+
 from webui import styles
 from webui.components import loading_icon, modal, navbar
-from webui.state import State
+from webui.state import QA, State
 
 
-def message(qa):
+def message(qa: QA) -> pc.Component:
+    """A single question/answer message.
+
+    Args:
+        qa: The question/answer pair.
+
+    Returns:
+        A component displaying the question/answer pair.
+    """
     return pc.box(
         pc.box(
             pc.text(
-                qa["question"],
+                qa.question,
                 bg=styles.border_color,
                 shadow=styles.shadow_light,
                 **styles.message_style,
@@ -18,7 +29,7 @@ def message(qa):
         ),
         pc.box(
             pc.text(
-                qa["answer"],
+                qa.answer,
                 bg=styles.accent_color,
                 shadow=styles.shadow_light,
                 **styles.message_style,
@@ -99,7 +110,7 @@ def navigate_chat(chat):
     return pc.hstack(
         pc.box(
             chat,
-            on_click=State.set_chat(chat),
+            on_click=lambda: State.set_chat(chat),
             style=styles.sidebar_style,
             color=styles.icon_color,
             flex="1",
@@ -108,7 +119,7 @@ def navigate_chat(chat):
             pc.icon(
                 tag="delete",
                 style=styles.icon_style,
-                on_click=[State.delete_chat],
+                on_click=State.delete_chat,
             ),
             style=styles.sidebar_style,
         ),
@@ -133,7 +144,7 @@ def drawer():
                 ),
                 pc.drawer_body(
                     pc.vstack(
-                        pc.foreach(State.chat_title, lambda chat: navigate_chat(chat)),
+                        pc.foreach(State.chat_titles, lambda chat: navigate_chat(chat)),
                         align_items="stretch",
                     )
                 ),
