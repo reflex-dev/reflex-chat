@@ -2,6 +2,8 @@ import pynecone as pc
 
 
 class LoadingIcon(pc.Component):
+    """A custom loading icon component."""
+
     library = "react-loading-icons"
     tag = "SpinningCircles"
     stroke: pc.Var[str]
