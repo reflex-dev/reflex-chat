@@ -1,7 +1,7 @@
 import openai
 import pynecone as pc
 
-openai.api_key = ""
+openai.api_key = "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"
 
 
 class QA(pc.Base):
@@ -65,7 +65,6 @@ class State(pc.State):
 
     def set_chat(self, chat_name: str):
         """Set the name of the current chat.
-
 
         Args:
             chat_name: The name of the chat.
