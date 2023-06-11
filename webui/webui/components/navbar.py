@@ -1,8 +1,10 @@
 import pynecone as pc
-from webui.styles import *
+
+from webui import styles
+from webui.state import State
 
 
-def navbar(State):
+def navbar():
     return pc.box(
         pc.hstack(
             pc.hstack(
@@ -34,7 +36,7 @@ def navbar(State):
             pc.hstack(
                 pc.button(
                     "+ New chat",
-                    bg=accent_color,
+                    bg=styles.accent_color,
                     px="4",
                     py="2",
                     h="auto",
@@ -55,11 +57,11 @@ def navbar(State):
             ),
             justify="space-between",
         ),
-        bg=bg_dark_color,
+        bg=styles.bg_dark_color,
         backdrop_filter="auto",
         backdrop_blur="lg",
         p="4",
-        border_bottom=f"1px solid {border_color}",
+        border_bottom=f"1px solid {styles.border_color}",
         position="sticky",
         top="0",
         z_index="100",

@@ -1,7 +1,9 @@
 import pynecone as pc
+from webui.state import State
 
 
-def modal(State):
+def modal() -> pc.Component:
+    """A modal to create a new chat."""
     return pc.modal(
         pc.modal_overlay(
             pc.modal_content(
