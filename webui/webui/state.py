@@ -1,7 +1,9 @@
+import os
+
 import openai
 import pynecone as pc
 
-openai.api_key = "YOUR_API_KEY_HERE"
+openai.api_key = os.environ["OPENAI_API_KEY"]
 
 
 class QA(pc.Base):
