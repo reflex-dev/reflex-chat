@@ -1,22 +1,22 @@
-import pynecone as pc
+import reflex as rx
 
 
-class LoadingIcon(pc.Component):
+class LoadingIcon(rx.Component):
     """A custom loading icon component."""
 
     library = "react-loading-icons"
     tag = "SpinningCircles"
-    stroke: pc.Var[str]
-    stroke_opacity: pc.Var[str]
-    fill: pc.Var[str]
-    fill_opacity: pc.Var[str]
-    stroke_width: pc.Var[str]
-    speed: pc.Var[str]
-    height: pc.Var[str]
+    stroke: rx.Var[str]
+    stroke_opacity: rx.Var[str]
+    fill: rx.Var[str]
+    fill_opacity: rx.Var[str]
+    stroke_width: rx.Var[str]
+    speed: rx.Var[str]
+    height: rx.Var[str]
 
     @classmethod
-    def get_controlled_triggers(cls) -> dict[str, pc.Var]:
-        return {"on_change": pc.EVENT_ARG}
+    def get_controlled_triggers(cls) -> dict[str, rx.Var]:
+        return {"on_change": rx.EVENT_ARG}
 
 
 loading_icon = LoadingIcon.create

@@ -1,24 +1,25 @@
 import os
 
 import openai
-import pynecone as pc
+import reflex as rx
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
+openai.api_base = os.getenv("OPENAI_API_BASE","https://api.openai.com/v1")
 
 
-class QA(pc.Base):
+class QA(rx.Base):
     """A question and answer pair."""
 
     question: str
     answer: str
 
 
-class State(pc.State):
+class State(rx.State):
     """The app state."""
 
     # A dict from the chat name to the list of questions and answers.
     chats: dict[str, list[QA]] = {
-        "Intros": [QA(question="What is your name?", answer="Pynecone")],
+        "Intros": [QA(question="What is your name?", answer="reflex")],
     }
 
     # The current chat name.
@@ -43,7 +44,7 @@ class State(pc.State):
         """Create a new chat."""
         # Insert a default question.
         self.chats[self.new_chat_name] = [
-            QA(question="What is your name?", answer="Pynecone")
+            QA(question="What is your name?", answer="reflex")
         ]
         self.current_chat = self.new_chat_name
 
@@ -60,7 +61,7 @@ class State(pc.State):
         del self.chats[self.current_chat]
         if len(self.chats) == 0:
             self.chats = {
-                "New Chat": [QA(question="What is your name?", answer="Pynecone")]
+                "New Chat": [QA(question="What is your name?", answer="reflex")]
             }
         self.current_chat = list(self.chats.keys())[0]
         self.toggle_drawer()
@@ -74,7 +75,7 @@ class State(pc.State):
         self.current_chat = chat_name
         self.toggle_drawer()
 
-    @pc.var
+    @rx.var
     def chat_titles(self) -> list[str]:
         """Get the list of chat titles.
 
@@ -102,11 +103,13 @@ class State(pc.State):
         yield
 
         # Start a new session to answer the question.
-        session = openai.Completion.create(
-            engine="text-davinci-003",
-            prompt=self.question,
-            max_tokens=50,
-            n=1,
+        session = openai.ChatCompletion.create(
+            model=os.getenv("OPENAI_MODEL","gpt-3.5"),
+            messages=[
+                { "role": "user", "content": self.question}
+            ],
+            # max_tokens=50,
+            # n=1,
             stop=None,
             temperature=0.7,
             stream=True,  # Enable streaming
@@ -116,10 +119,11 @@ class State(pc.State):
 
         # Stream the results, yielding after every word.
         for item in session:
-            answer_text = item["choices"][0]["text"]
-            self.chats[self.current_chat][-1].answer += answer_text
-            self.chats = self.chats
-            yield
+            if hasattr(item.choices[0].delta, "content"):        
+                answer_text = item.choices[0].delta.content
+                self.chats[self.current_chat][-1].answer += answer_text
+                self.chats = self.chats
+                yield
 
         # Toggle the processing flag.
         self.processing = False
