@@ -1,15 +1,15 @@
 """The main Chat app."""
 
-import pynecone as pc
+import reflex as rx
 
 from webui import styles
 from webui.components import chat, modal, navbar, sidebar
 from webui.state import State
 
 
-def index() -> pc.Component:
+def index() -> rx.Component:
     """The main app."""
-    return pc.vstack(
+    return rx.vstack(
         navbar(),
         chat.chat(),
         chat.action_bar(),
@@ -24,6 +24,6 @@ def index() -> pc.Component:
 
 
 # Add state and page to the app.
-app = pc.App(state=State, style=styles.base_style)
+app = rx.App(state=State, style=styles.base_style)
 app.add_page(index)
 app.compile()

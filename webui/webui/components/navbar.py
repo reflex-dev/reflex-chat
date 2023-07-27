@@ -1,22 +1,22 @@
-import pynecone as pc
+import reflex as rx
 
 from webui import styles
 from webui.state import State
 
 
 def navbar():
-    return pc.box(
-        pc.hstack(
-            pc.hstack(
-                pc.icon(
+    return rx.box(
+        rx.hstack(
+            rx.hstack(
+                rx.icon(
                     tag="hamburger",
                     mr=4,
                     on_click=State.toggle_drawer,
                     cursor="pointer",
                 ),
-                pc.link(
-                    pc.box(
-                        pc.image(src="favicon.ico", width=30, height="auto"),
+                rx.link(
+                    rx.box(
+                        rx.image(src="favicon.ico", width=30, height="auto"),
                         p="1",
                         border_radius="6",
                         bg="#F0F0F0",
@@ -24,17 +24,17 @@ def navbar():
                     ),
                     href="/",
                 ),
-                pc.breadcrumb(
-                    pc.breadcrumb_item(
-                        pc.heading("PyneconeGPT", size="sm"),
+                rx.breadcrumb(
+                    rx.breadcrumb_item(
+                        rx.heading("ReflexGPT", size="sm"),
                     ),
-                    pc.breadcrumb_item(
-                        pc.text(State.current_chat, size="sm", font_weight="normal"),
+                    rx.breadcrumb_item(
+                        rx.text(State.current_chat, size="sm", font_weight="normal"),
                     ),
                 ),
             ),
-            pc.hstack(
-                pc.button(
+            rx.hstack(
+                rx.button(
                     "+ New chat",
                     bg=styles.accent_color,
                     px="4",
@@ -42,15 +42,15 @@ def navbar():
                     h="auto",
                     on_click=State.toggle_modal,
                 ),
-                pc.menu(
-                    pc.menu_button(
-                        pc.avatar(name="User", size="md"),
-                        pc.box(),
+                rx.menu(
+                    rx.menu_button(
+                        rx.avatar(name="User", size="md"),
+                        rx.box(),
                     ),
-                    pc.menu_list(
-                        pc.menu_item("Help"),
-                        pc.menu_divider(),
-                        pc.menu_item("Settings"),
+                    rx.menu_list(
+                        rx.menu_item("Help"),
+                        rx.menu_divider(),
+                        rx.menu_item("Settings"),
                     ),
                 ),
                 spacing="8",

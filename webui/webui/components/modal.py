@@ -1,16 +1,16 @@
-import pynecone as pc
+import reflex as rx
 from webui.state import State
 
 
-def modal() -> pc.Component:
+def modal() -> rx.Component:
     """A modal to create a new chat."""
-    return pc.modal(
-        pc.modal_overlay(
-            pc.modal_content(
-                pc.modal_header(
-                    pc.hstack(
-                        pc.text("Create new chat"),
-                        pc.icon(
+    return rx.modal(
+        rx.modal_overlay(
+            rx.modal_content(
+                rx.modal_header(
+                    rx.hstack(
+                        rx.text("Create new chat"),
+                        rx.icon(
                             tag="close",
                             font_size="sm",
                             on_click=State.toggle_modal,
@@ -22,8 +22,8 @@ def modal() -> pc.Component:
                         justify_content="space-between",
                     )
                 ),
-                pc.modal_body(
-                    pc.input(
+                rx.modal_body(
+                    rx.input(
                         placeholder="Type something...",
                         on_blur=State.set_new_chat_name,
                         bg="#222",
@@ -31,8 +31,8 @@ def modal() -> pc.Component:
                         _placeholder={"color": "#fffa"},
                     ),
                 ),
-                pc.modal_footer(
-                    pc.button(
+                rx.modal_footer(
+                    rx.button(
                         "Create",
                         bg="#5535d4",
                         box_shadow="md",

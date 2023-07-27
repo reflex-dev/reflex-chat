@@ -1,14 +1,14 @@
-import pynecone as pc
+import reflex as rx
 
 
-class WebuiConfig(pc.Config):
+class WebuiConfig(rx.Config):
     pass
 
 
 config = WebuiConfig(
     app_name="webui",
-    db_url="sqlite:///pynecone.db",
-    env=pc.Env.DEV,
+    db_url="sqlite:///reflex.db",
+    env=rx.Env.DEV,
     frontend_packages=[
         "react-loading-icons",
     ],

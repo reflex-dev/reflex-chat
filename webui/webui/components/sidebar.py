@@ -1,25 +1,25 @@
-import pynecone as pc
+import reflex as rx
 
 from webui import styles
 from webui.state import State
 
 
-def sidebar_chat(chat: str) -> pc.Component:
+def sidebar_chat(chat: str) -> rx.Component:
     """A sidebar chat item.
 
     Args:
         chat: The chat item.
     """
-    return pc.hstack(
-        pc.box(
+    return rx.hstack(
+        rx.box(
             chat,
             on_click=lambda: State.set_chat(chat),
             style=styles.sidebar_style,
             color=styles.icon_color,
             flex="1",
         ),
-        pc.box(
-            pc.icon(
+        rx.box(
+            rx.icon(
                 tag="delete",
                 style=styles.icon_style,
                 on_click=State.delete_chat,
@@ -31,24 +31,24 @@ def sidebar_chat(chat: str) -> pc.Component:
     )
 
 
-def sidebar() -> pc.Component:
+def sidebar() -> rx.Component:
     """The sidebar component."""
-    return pc.drawer(
-        pc.drawer_overlay(
-            pc.drawer_content(
-                pc.drawer_header(
-                    pc.hstack(
-                        pc.text("Chats"),
-                        pc.icon(
+    return rx.drawer(
+        rx.drawer_overlay(
+            rx.drawer_content(
+                rx.drawer_header(
+                    rx.hstack(
+                        rx.text("Chats"),
+                        rx.icon(
                             tag="close",
                             on_click=State.toggle_drawer,
                             style=styles.icon_style,
                         ),
                     )
                 ),
-                pc.drawer_body(
-                    pc.vstack(
-                        pc.foreach(State.chat_titles, lambda chat: sidebar_chat(chat)),
+                rx.drawer_body(
+                    rx.vstack(
+                        rx.foreach(State.chat_titles, lambda chat: sidebar_chat(chat)),
                         align_items="stretch",
                     )
                 ),
