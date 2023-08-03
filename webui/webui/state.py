@@ -104,7 +104,7 @@ class State(rx.State):
 
         # Start a new session to answer the question.
         session = openai.ChatCompletion.create(
-            model=os.getenv("OPENAI_MODEL","gpt-3.5"),
+            model=os.getenv("OPENAI_MODEL","gpt-3.5-turbo"),
             messages=[
                 { "role": "user", "content": self.question}
             ],
