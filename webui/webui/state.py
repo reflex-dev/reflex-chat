@@ -102,12 +102,21 @@ class State(rx.State):
         self.processing = True
         yield
 
+        # Build the messages.
+        messages = [
+            { "role": "system", "content": "You are a friendly chatbot named Reflex."}
+        ]
+
+        for qa in self.chats[self.current_chat][1:]:
+            messages.append({ "role": "user", "content": qa.question})
+            messages.append({ "role": "assistant", "content": qa.answer})
+
+        messages.append({ "role": "user", "content": self.question})
+
         # Start a new session to answer the question.
         session = openai.ChatCompletion.create(
             model=os.getenv("OPENAI_MODEL","gpt-3.5-turbo"),
-            messages=[
-                { "role": "user", "content": self.question}
-            ],
+            messages=messages,
             # max_tokens=50,
             # n=1,
             stop=None,
@@ -119,7 +128,7 @@ class State(rx.State):
 
         # Stream the results, yielding after every word.
         for item in session:
-            if hasattr(item.choices[0].delta, "content"):        
+            if hasattr(item.choices[0].delta, "content"):
                 answer_text = item.choices[0].delta.content
                 self.chats[self.current_chat][-1].answer += answer_text
                 self.chats = self.chats
