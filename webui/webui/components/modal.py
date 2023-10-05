@@ -40,7 +40,7 @@ def modal() -> rx.Component:
                         py="2",
                         h="auto",
                         _hover={"bg": "#4c2db3"},
-                        on_click=[State.create_chat, State.toggle_modal],
+                        on_click=State.create_chat,
                     ),
                 ),
                 bg="#222",

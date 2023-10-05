@@ -14,9 +14,8 @@ class LoadingIcon(rx.Component):
     speed: rx.Var[str]
     height: rx.Var[str]
 
-    @classmethod
-    def get_controlled_triggers(cls) -> dict[str, rx.Var]:
-        return {"on_change": rx.EVENT_ARG}
+    def get_event_triggers(self) -> dict:
+        return {"on_change": lambda status: [status]}
 
 
 loading_icon = LoadingIcon.create

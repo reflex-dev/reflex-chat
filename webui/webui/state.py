@@ -4,7 +4,7 @@ import openai
 import reflex as rx
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
-openai.api_base = os.getenv("OPENAI_API_BASE","https://api.openai.com/v1")
+openai.api_base = os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
 
 
 class QA(rx.Base):
@@ -14,18 +14,21 @@ class QA(rx.Base):
     answer: str
 
 
+DEFAULT_CHATS = {
+    "Intros": [],
+}
+
+
 class State(rx.State):
     """The app state."""
 
     # A dict from the chat name to the list of questions and answers.
-    chats: dict[str, list[QA]] = {
-        "Intros": [QA(question="What is your name?", answer="reflex")],
-    }
+    chats: dict[str, list[QA]] = DEFAULT_CHATS
 
     # The current chat name.
     current_chat = "Intros"
 
-    # The currrent question.
+    # The current question.
     question: str
 
     # Whether we are processing the question.
@@ -42,11 +45,12 @@ class State(rx.State):
 
     def create_chat(self):
         """Create a new chat."""
-        # Insert a default question.
-        self.chats[self.new_chat_name] = [
-            QA(question="What is your name?", answer="reflex")
-        ]
+        # Add the new chat to the list of chats.
         self.current_chat = self.new_chat_name
+        self.chats[self.new_chat_name] = []
+
+        # Toggle the modal.
+        self.modal_open = False
 
     def toggle_modal(self):
         """Toggle the new chat modal."""
@@ -60,9 +64,7 @@ class State(rx.State):
         """Delete the current chat."""
         del self.chats[self.current_chat]
         if len(self.chats) == 0:
-            self.chats = {
-                "New Chat": [QA(question="What is your name?", answer="reflex")]
-            }
+            self.chats = DEFAULT_CHATS
         self.current_chat = list(self.chats.keys())[0]
         self.toggle_drawer()
 
@@ -90,41 +92,36 @@ class State(rx.State):
         Args:
             form_data: A dict with the current question.
         """
-        # Check if we have already asked the last question or if the question is empty
-        self.question = form_data["question"]
-        if (
-            self.chats[self.current_chat][-1].question == self.question
-            or self.question == ""
-        ):
+        # Check if the question is empty
+        if self.question == "":
             return
 
-        # Set the processing flag to true and yield.
+        # Add the question to the list of questions.
+        qa = QA(question=self.question, answer="")
+        self.chats[self.current_chat].append(qa)
+
+        # Clear the input and start the processing.
         self.processing = True
+        self.question = ""
         yield
 
         # Build the messages.
         messages = [
-            { "role": "system", "content": "You are a friendly chatbot named Reflex."}
+            {"role": "system", "content": "You are a friendly chatbot named Reflex."}
         ]
+        for qa in self.chats[self.current_chat]:
+            messages.append({"role": "user", "content": qa.question})
+            messages.append({"role": "assistant", "content": qa.answer})
 
-        for qa in self.chats[self.current_chat][1:]:
-            messages.append({ "role": "user", "content": qa.question})
-            messages.append({ "role": "assistant", "content": qa.answer})
-
-        messages.append({ "role": "user", "content": self.question})
+        # Remove the last mock answer.
+        messages = messages[:-1]
 
         # Start a new session to answer the question.
         session = openai.ChatCompletion.create(
-            model=os.getenv("OPENAI_MODEL","gpt-3.5-turbo"),
+            model=os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"),
             messages=messages,
-            # max_tokens=50,
-            # n=1,
-            stop=None,
-            temperature=0.7,
-            stream=True,  # Enable streaming
+            stream=True,
         )
-        qa = QA(question=self.question, answer="")
-        self.chats[self.current_chat].append(qa)
 
         # Stream the results, yielding after every word.
         for item in session:
