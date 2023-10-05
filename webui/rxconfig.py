@@ -1,15 +1,6 @@
 import reflex as rx
 
 
-class WebuiConfig(rx.Config):
-    pass
-
-
-config = WebuiConfig(
+config = rx.Config(
     app_name="webui",
-    db_url="sqlite:///reflex.db",
-    env=rx.Env.DEV,
-    frontend_packages=[
-        "react-loading-icons",
-    ],
 )
