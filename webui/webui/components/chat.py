@@ -63,7 +63,7 @@ def action_bar() -> rx.Component:
                     rx.hstack(
                         rx.input(
                             placeholder="Type something...",
-                            value=State.question,
+                            id="question",
                             on_change=State.set_question,
                             _placeholder={"color": "#fffa"},
                             _hover={"border_color": styles.accent_color},
@@ -82,7 +82,8 @@ def action_bar() -> rx.Component:
                     ),
                     is_disabled=State.processing,
                 ),
-                on_submit=State.process_question,
+                # on_submit=[State.process_question,rx.set_value("question", "")],
+                on_submit=[State.baidu_process_question,rx.set_value("question", "")],
                 width="100%",
             ),
             rx.text(
