@@ -82,8 +82,8 @@ def action_bar() -> rx.Component:
                     ),
                     is_disabled=State.processing,
                 ),
-                # on_submit=[State.process_question,rx.set_value("question", "")],
-                on_submit=[State.baidu_process_question,rx.set_value("question", "")],
+                on_submit=[State.process_question,rx.set_value("question", "")],
+                # on_submit=[State.baidu_process_question,rx.set_value("question", "")],
                 width="100%",
             ),
             rx.text(
