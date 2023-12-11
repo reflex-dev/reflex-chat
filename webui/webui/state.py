@@ -13,8 +13,7 @@ BAIDU_SECRET_KEY = '***'
 def get_access_token():
 
     """
-    使用 AK，SK 生成鉴权签名（Access Token）
-    :return: access_token，或是None(如果错误)
+    :return: access_token
     """
     url = "https://aip.baidubce.com/oauth/2.0/token"
     params = {"grant_type": "client_credentials", "client_id": BAIDU_API_KEY, "client_secret": BAIDU_SECRET_KEY}
