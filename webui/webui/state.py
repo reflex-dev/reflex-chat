@@ -167,10 +167,7 @@ class State(rx.State):
 
     async def baidu_process_question(self, form_data: dict[str, str]):
         """Get the response from the API.
-<<<<<<< HEAD
 
-=======
->>>>>>> de9952c (add baidu api)
         Args:
             form_data: A dict with the current question.
         """
