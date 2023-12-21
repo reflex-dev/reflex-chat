@@ -64,7 +64,6 @@ def action_bar() -> rx.Component:
                         rx.input(
                             placeholder="Type something...",
                             id="question",
-                            on_change=State.set_question,
                             _placeholder={"color": "#fffa"},
                             _hover={"border_color": styles.accent_color},
                             style=styles.input_style,
@@ -82,7 +81,8 @@ def action_bar() -> rx.Component:
                     ),
                     is_disabled=State.processing,
                 ),
-                on_submit=[State.process_question, rx.set_value("question", "")],
+                on_submit=State.process_question,
+                reset_on_submit=True,
                 width="100%",
             ),
             rx.text(

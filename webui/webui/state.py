@@ -4,14 +4,15 @@ import json
 import openai
 import reflex as rx
 
-import requests
-import json
-
-openai.api_key = os.environ["OPENAI_API_KEY"]
+openai.api_key = os.getenv("OPENAI_API_KEY")
 openai.api_base = os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
 
-BAIDU_API_KEY = os.environ["BAIDU_API_KEY"]
-BAIDU_SECRET_KEY = os.environ["BAIDU_SECRET_KEY"]
+BAIDU_API_KEY = os.getenv("BAIDU_API_KEY")
+BAIDU_SECRET_KEY = os.getenv("BAIDU_SECRET_KEY")
+
+
+if not openai.api_key and not BAIDU_API_KEY:
+    raise Exception("Please set OPENAI_API_KEY or BAIDU_API_KEY")
 
 
 def get_access_token():
@@ -63,7 +64,7 @@ class State(rx.State):
     # Whether the modal is open.
     modal_open: bool = False
 
-    api_type: str = "baidu"
+    api_type: str = "baidu" if BAIDU_API_KEY else "openai"
 
     def create_chat(self):
         """Create a new chat."""
@@ -109,31 +110,34 @@ class State(rx.State):
         return list(self.chats.keys())
 
     async def process_question(self, form_data: dict[str, str]):
+        # Get the question from the form
+        question = form_data["question"]
+
+        # Check if the question is empty
+        if question == "":
+            return
+
         if self.api_type == "openai":
             model = self.openai_process_question
         else:
             model = self.baidu_process_question
 
-        async for value in model(form_data):
+        async for value in model(question):
             yield value
 
-    async def openai_process_question(self, form_data: dict[str, str]):
+    async def openai_process_question(self, question: str):
         """Get the response from the API.
 
         Args:
             form_data: A dict with the current question.
         """
-        # Check if the question is empty
-        if self.question == "":
-            return
 
         # Add the question to the list of questions.
-        qa = QA(question=self.question, answer="")
+        qa = QA(question=question, answer="")
         self.chats[self.current_chat].append(qa)
 
         # Clear the input and start the processing.
         self.processing = True
-        self.question = ""
         yield
 
         # Build the messages.
@@ -165,23 +169,18 @@ class State(rx.State):
         # Toggle the processing flag.
         self.processing = False
 
-    async def baidu_process_question(self, form_data: dict[str, str]):
+    async def baidu_process_question(self, question: str):
         """Get the response from the API.
 
         Args:
             form_data: A dict with the current question.
         """
-        # Check if the question is empty
-        if self.question == "":
-            return
-
         # Add the question to the list of questions.
-        qa = QA(question=self.question, answer="")
+        qa = QA(question=question, answer="")
         self.chats[self.current_chat].append(qa)
 
         # Clear the input and start the processing.
         self.processing = True
-        self.question = ""
         yield
 
         # Build the messages.
