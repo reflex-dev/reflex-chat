@@ -1,10 +1,8 @@
 import os
-
-import openai
-import reflex as rx
-
 import requests
 import json
+import openai
+import reflex as rx
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
 openai.api_base = os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
@@ -62,7 +60,6 @@ class State(rx.State):
     # Whether the modal is open.
     modal_open: bool = False
 
-    # Whether the api_type is baidu.
     api_type: str = "baidu"
 
     def create_chat(self):
@@ -167,6 +164,7 @@ class State(rx.State):
 
     async def baidu_process_question(self, form_data: dict[str, str]):
         """Get the response from the API.
+
         Args:
             form_data: A dict with the current question.
         """
