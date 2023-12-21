@@ -1,17 +1,16 @@
 import os
 import requests
 import json
-import openai
+from openai import OpenAI
 import reflex as rx
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
-openai.api_base = os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
+client = OpenAI(api_key=os.getenv("OPENAIa_API_KEY"))
 
 BAIDU_API_KEY = os.getenv("BAIDU_API_KEY")
 BAIDU_SECRET_KEY = os.getenv("BAIDU_SECRET_KEY")
 
 
-if not openai.api_key and not BAIDU_API_KEY:
+if not client.api_key and not BAIDU_API_KEY:
     raise Exception("Please set OPENAI_API_KEY or BAIDU_API_KEY")
 
 
@@ -152,16 +151,13 @@ class State(rx.State):
         messages = messages[:-1]
 
         # Start a new session to answer the question.
-        session = openai.ChatCompletion.create(
-            model=os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"),
-            messages=messages,
-            stream=True,
-        )
+        session = client.chat.completions.create(model=os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"),
+        messages=messages,
+        stream=True)
 
         # Stream the results, yielding after every word.
         for item in session:
-            if hasattr(item.choices[0].delta, "content"):
-                answer_text = item.choices[0].delta.content
+            if answer_text := item.choices[0].delta.content:
                 self.chats[self.current_chat][-1].answer += answer_text
                 self.chats = self.chats
                 yield
