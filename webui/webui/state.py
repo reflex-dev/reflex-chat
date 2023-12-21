@@ -4,6 +4,9 @@ import json
 import openai
 import reflex as rx
 
+import requests
+import json
+
 openai.api_key = os.environ["OPENAI_API_KEY"]
 openai.api_base = os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
 
@@ -164,7 +167,10 @@ class State(rx.State):
 
     async def baidu_process_question(self, form_data: dict[str, str]):
         """Get the response from the API.
+<<<<<<< HEAD
 
+=======
+>>>>>>> de9952c (add baidu api)
         Args:
             form_data: A dict with the current question.
         """
