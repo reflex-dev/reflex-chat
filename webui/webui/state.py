@@ -151,9 +151,11 @@ class State(rx.State):
         messages = messages[:-1]
 
         # Start a new session to answer the question.
-        session = client.chat.completions.create(model=os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"),
-        messages=messages,
-        stream=True)
+        session = client.chat.completions.create(
+            model=os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"),
+            messages=messages,
+            stream=True,
+        )
 
         # Stream the results, yielding after every word.
         for item in session:
