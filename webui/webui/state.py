@@ -4,7 +4,7 @@ import json
 from openai import OpenAI
 import reflex as rx
 
-client = OpenAI(api_key=os.getenv("OPENAIa_API_KEY"))
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 BAIDU_API_KEY = os.getenv("BAIDU_API_KEY")
 BAIDU_SECRET_KEY = os.getenv("BAIDU_SECRET_KEY")
