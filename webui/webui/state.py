@@ -1,53 +1,63 @@
+from typing import List, Dict
 import os
 import requests
 import json
-import openai
+
+from openai import OpenAI
 import reflex as rx
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
-openai.api_base = os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
-
-BAIDU_API_KEY = os.getenv("BAIDU_API_KEY")
-BAIDU_SECRET_KEY = os.getenv("BAIDU_SECRET_KEY")
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
-if not openai.api_key and not BAIDU_API_KEY:
-    raise Exception("Please set OPENAI_API_KEY or BAIDU_API_KEY")
-
-
-def get_access_token():
-    """
-    :return: access_token
-    """
-    url = "https://aip.baidubce.com/oauth/2.0/token"
-    params = {
-        "grant_type": "client_credentials",
-        "client_id": BAIDU_API_KEY,
-        "client_secret": BAIDU_SECRET_KEY,
-    }
-    return str(requests.post(url, params=params).json().get("access_token"))
-
-
-class QA(rx.Base):
+class QuestionAnswer(rx.Base):
     """A question and answer pair."""
-
     question: str
     answer: str
 
+MODEL = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
+
+TRIGGER_KEYWORD = "SERVICE ORDER INFORMATION"
+
+TEMPERATURE = 0
 
 DEFAULT_CHATS = {
-    "Intros": [],
+    "Demo Request": [],
 }
+
+ASSISTANT_SYSTEM_PROMPT = """
+You are an assistant focused on service management requests from tenants. Your goal is to gather information to put together in a formal service order form for a property manager. 
+
+===========
+You will follow these guidelines:
+1. If there is not enough suitable information form a tenant you will prompt follow-up questions, if needed, till you have suitable information of the issue / situation. 
+2. Try to limit the amount of follow-up questions required. 
+3. Ask one follow-up question at a time if needed. 
+4. If you do ask follow-up questions you are allowed a MAXIMUM of 3 follow-up questions. 
+5. Once you have suitable information start your output message as ***SERVICE ORDER INFORMATION**:
+===========
+
+===========
+Here is an example of a suitable service order: 
+I am reaching out to report a maintenance issue that has recently occurred in my apartment, specifically concerning a broken window in the living room. The damage was caused by a storm, where a fallen tree branch impacted the windowpane, resulting in its shattering. This window is located on the east side of the building, facing the courtyard. Currently, the broken glass presents a significant safety hazard, and the opening has left the apartment vulnerable to environmental elements such as wind and rain. While the glass is extensively fractured, the window frame remains largely undamaged. To mitigate immediate risks, I have temporarily covered the window with plastic sheeting. This measure is intended to prevent further damage from weather conditions and to maintain safety within the apartment.
+===========
+
+===========
+Here is an example of a non-suitable service order:
+I have a broken window. 
+===========
+
+FOLLOW THESE GUIDELINES, OR YOU WILL BE FIRED.
+"""
 
 
 class State(rx.State):
     """The app state."""
 
-    # A dict from the chat name to the list of questions and answers.
-    chats: dict[str, list[QA]] = DEFAULT_CHATS
+    # A Dict from the chat name to the list of questions and answers.
+    chats: Dict[str, List[QuestionAnswer]] = DEFAULT_CHATS
 
     # The current chat name.
-    current_chat = "Intros"
+    current_chat = "Demo Request"
 
     # The current question.
     question: str
@@ -64,7 +74,7 @@ class State(rx.State):
     # Whether the modal is open.
     modal_open: bool = False
 
-    api_type: str = "baidu" if BAIDU_API_KEY else "openai"
+    api_type: str = "openai"
 
     def create_chat(self):
         """Create a new chat."""
@@ -75,6 +85,9 @@ class State(rx.State):
         # Toggle the modal.
         self.modal_open = False
 
+    def submit_maintenance_request(self):
+        pass
+    
     def toggle_modal(self):
         """Toggle the new chat modal."""
         self.modal_open = not self.modal_open
@@ -101,7 +114,7 @@ class State(rx.State):
         self.toggle_drawer()
 
     @rx.var
-    def chat_titles(self) -> list[str]:
+    def chat_titles(self) -> List[str]:
         """Get the list of chat titles.
 
         Returns:
@@ -109,7 +122,8 @@ class State(rx.State):
         """
         return list(self.chats.keys())
 
-    async def process_question(self, form_data: dict[str, str]):
+    async def process_question(self, form_data: Dict[str, str]):
+        # self.toggle_modal()
         # Get the question from the form
         question = form_data["question"]
 
@@ -117,94 +131,60 @@ class State(rx.State):
         if question == "":
             return
 
-        if self.api_type == "openai":
-            model = self.openai_process_question
-        else:
-            model = self.baidu_process_question
-
+        model = self.openai_process_question
         async for value in model(question):
             yield value
+        
+        last_message = self.get_context()
+        
+        if TRIGGER_KEYWORD in last_message:
+            self.toggle_modal()
+        
+    def get_context(self):
+        """Get the combined context of question and answer from the current chat."""
+        context = ""
+        for qa in self.chats[self.current_chat]:
+            context += qa.answer
+        return context
 
     async def openai_process_question(self, question: str):
         """Get the response from the API.
 
         Args:
-            form_data: A dict with the current question.
+            form_data: A Dict with the current question.
         """
 
         # Add the question to the list of questions.
-        qa = QA(question=question, answer="")
-        self.chats[self.current_chat].append(qa)
+        question_answer = QuestionAnswer(question=question, answer="")
+        self.chats[self.current_chat].append(question_answer)
 
         # Clear the input and start the processing.
         self.processing = True
         yield
 
         # Build the messages.
-        messages = [
-            {"role": "system", "content": "You are a friendly chatbot named Reflex."}
-        ]
-        for qa in self.chats[self.current_chat]:
-            messages.append({"role": "user", "content": qa.question})
-            messages.append({"role": "assistant", "content": qa.answer})
-
+        messages = [{"role": "system", "content": ASSISTANT_SYSTEM_PROMPT}]
+        for question_answer in self.chats[self.current_chat]:
+            messages.extend(
+                (
+                    {"role": "user", "content": question_answer.question},
+                    {"role": "assistant", "content": question_answer.answer},
+                )
+            )
         # Remove the last mock answer.
         messages = messages[:-1]
 
         # Start a new session to answer the question.
-        session = openai.ChatCompletion.create(
-            model=os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"),
-            messages=messages,
-            stream=True,
+        session = client.chat.completions.create(
+            model=MODEL, messages=messages, temperature=TEMPERATURE, stream=True
         )
 
         # Stream the results, yielding after every word.
         for item in session:
             if hasattr(item.choices[0].delta, "content"):
-                answer_text = item.choices[0].delta.content
-                self.chats[self.current_chat][-1].answer += answer_text
-                self.chats = self.chats
+                if answer_text := item.choices[0].delta.content:
+                    self.chats[self.current_chat][-1].answer += answer_text
                 yield
 
-        # Toggle the processing flag.
-        self.processing = False
-
-    async def baidu_process_question(self, question: str):
-        """Get the response from the API.
-
-        Args:
-            form_data: A dict with the current question.
-        """
-        # Add the question to the list of questions.
-        qa = QA(question=question, answer="")
-        self.chats[self.current_chat].append(qa)
-
-        # Clear the input and start the processing.
-        self.processing = True
-        yield
-
-        # Build the messages.
-        messages = []
-        for qa in self.chats[self.current_chat]:
-            messages.append({"role": "user", "content": qa.question})
-            messages.append({"role": "assistant", "content": qa.answer})
-
-        # Remove the last mock answer.
-        messages = json.dumps({"messages": messages[:-1]})
-        # Start a new session to answer the question.
-        session = requests.request(
-            "POST",
-            "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions_pro?access_token="
-            + get_access_token(),
-            headers={"Content-Type": "application/json"},
-            data=messages,
-        )
-
-        json_data = json.loads(session.text)
-        if "result" in json_data.keys():
-            answer_text = json_data["result"]
-            self.chats[self.current_chat][-1].answer += answer_text
-            self.chats = self.chats
-            yield
         # Toggle the processing flag.
         self.processing = False

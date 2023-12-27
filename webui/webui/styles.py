@@ -44,6 +44,17 @@ sidebar_style = dict(
     ),
 )
 
+# make upload_button have no border, the icon white
+upload_button = dict(
+    bg="transparent",
+    border="none",
+    color="#fff",
+    cursor="pointer",
+    _hover=dict(color="#fff"),
+    _focus=dict(color="#fff"),
+    _active=dict(color="#fff"),
+)
+
 base_style = {
     rx.Avatar: {
         "shadow": shadow,

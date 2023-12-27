@@ -2,14 +2,14 @@ import reflex as rx
 
 from webui import styles
 from webui.components import loading_icon
-from webui.state import QA, State
+from webui.state import QuestionAnswer, State
 
 
-def message(qa: QA) -> rx.Component:
+def message(question_answer: QuestionAnswer) -> rx.Component:
     """A single question/answer message.
 
     Args:
-        qa: The question/answer pair.
+        question_answer: The question/answer pair.
 
     Returns:
         A component displaying the question/answer pair.
@@ -17,7 +17,7 @@ def message(qa: QA) -> rx.Component:
     return rx.box(
         rx.box(
             rx.text(
-                qa.question,
+                question_answer.question,
                 bg=styles.border_color,
                 shadow=styles.shadow_light,
                 **styles.message_style,
@@ -27,7 +27,7 @@ def message(qa: QA) -> rx.Component:
         ),
         rx.box(
             rx.text(
-                qa.answer,
+                question_answer.answer,
                 bg=styles.accent_color,
                 shadow=styles.shadow_light,
                 **styles.message_style,
@@ -61,8 +61,25 @@ def action_bar() -> rx.Component:
             rx.form(
                 rx.form_control(
                     rx.hstack(
+                        # rx.upload(
+                        #     rx.button(
+                        #         rx.icon(tag="attachment"), style=styles.upload_button
+                        #     ),
+                        #     multiple=True,
+                        #     accept={
+                        #         "application/pdf": [".pdf"],
+                        #         "image/png": [".png"],
+                        #         "image/jpeg": [".jpg", ".jpeg"],
+                        #         "image/gif": [".gif"],
+                        #         "image/webp": [".webp"],
+                        #         "text/html": [".html", ".htm"],
+                        #     },
+                        #     max_files=5,
+                        #     disabled=True,
+                        #     on_keyboard=True,
+                        # ),
                         rx.input(
-                            placeholder="Type something...",
+                            placeholder="Provide details regarding issue...",
                             id="question",
                             _placeholder={"color": "#fffa"},
                             _hover={"border_color": styles.accent_color},
@@ -86,7 +103,7 @@ def action_bar() -> rx.Component:
                 width="100%",
             ),
             rx.text(
-                "ReflexGPT may return factually incorrect or misleading responses. Use discretion.",
+                "Disclaimer: This application is a demo and may require enhancements and proper guardrails; user discretion is advised.",
                 font_size="xs",
                 color="#fff6",
                 text_align="center",

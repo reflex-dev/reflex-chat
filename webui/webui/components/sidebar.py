@@ -38,7 +38,7 @@ def sidebar() -> rx.Component:
             rx.drawer_content(
                 rx.drawer_header(
                     rx.hstack(
-                        rx.text("Chats"),
+                        rx.text("Previous Requests"),
                         rx.icon(
                             tag="close",
                             on_click=State.toggle_drawer,

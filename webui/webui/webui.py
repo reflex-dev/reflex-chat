@@ -6,7 +6,6 @@ from webui import styles
 from webui.components import chat, modal, navbar, sidebar
 from webui.state import State
 
-
 def index() -> rx.Component:
     """The main app."""
     return rx.vstack(
@@ -26,4 +25,5 @@ def index() -> rx.Component:
 # Add state and page to the app.
 app = rx.App(style=styles.base_style)
 app.add_page(index)
+# app.add_page(index, route="/tenant-portal")
 app.compile()

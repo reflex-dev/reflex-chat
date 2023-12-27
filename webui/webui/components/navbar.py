@@ -26,7 +26,7 @@ def navbar():
                 ),
                 rx.breadcrumb(
                     rx.breadcrumb_item(
-                        rx.heading("ReflexGPT", size="sm"),
+                        rx.heading("Maintenance Request Assistant", size="sm"),
                     ),
                     rx.breadcrumb_item(
                         rx.text(State.current_chat, size="sm", font_weight="normal"),
@@ -35,16 +35,16 @@ def navbar():
             ),
             rx.hstack(
                 rx.button(
-                    "+ New chat",
+                    "+ New Request",
                     bg=styles.accent_color,
                     px="4",
                     py="2",
                     h="auto",
-                    on_click=State.toggle_modal,
+                    on_click=State.create_chat,
                 ),
                 rx.menu(
                     rx.menu_button(
-                        rx.avatar(name="User", size="md"),
+                        rx.avatar(name="Demo User", size="md"),
                         rx.box(),
                     ),
                     rx.menu_list(
