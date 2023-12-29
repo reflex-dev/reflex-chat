@@ -21,6 +21,7 @@ def message(question_answer: QuestionAnswer) -> rx.Component:
                 bg=styles.border_color,
                 shadow=styles.shadow_light,
                 **styles.message_style,
+                text_align="left",
             ),
             text_align="right",
             margin_top="1em",
@@ -39,10 +40,48 @@ def message(question_answer: QuestionAnswer) -> rx.Component:
     )
 
 
+def processing_message() -> rx.Component:
+    """A message indicating that the maintenance request is being processed."""
+    return rx.box(
+        rx.box(
+            rx.hstack(
+                loading_icon(color="white", height="2em", width="1em"),
+                rx.text("Processing your maintenance request..."),
+            ),
+            shadow=styles.shadow_light,
+            **styles.message_style,
+            text_align="left",
+            margin_top="1em",
+            bg="#538F88",
+        )
+    )
+
+
+def submitted_message() -> rx.Component:
+    """A message indicating that the maintenance request is being processed."""
+    return rx.box(
+        rx.box(
+            rx.hstack(
+                rx.icon(tag="check_circle", height="2em", width="1em", color="white"),
+                rx.text("Maintenance request submitted."),
+            ),
+            shadow=styles.shadow_light,
+            **styles.message_style,
+            text_align="left",
+            margin_top="1em",
+            bg="#538F88",
+        )
+    )
+
+
 def chat() -> rx.Component:
     """List all the messages in a single conversation."""
     return rx.vstack(
-        rx.box(rx.foreach(State.chats[State.current_chat], message)),
+        rx.box(
+            rx.foreach(State.chats[State.current_chat], message),
+            rx.cond(State.form_processing, processing_message(), rx.box()),
+            rx.cond(State.maintenance_request_submitted, submitted_message(), rx.box()),
+        ),
         py="8",
         flex="1",
         width="100%",
@@ -63,40 +102,70 @@ def action_bar() -> rx.Component:
                     rx.hstack(
                         # rx.upload(
                         #     rx.button(
-                        #         rx.icon(tag="attachment"), style=styles.upload_button
+                        #         rx.icon(tag="attachment"),
+                        #         style=styles.upload_button,
                         #     ),
+                        #     id="file_upload",
                         #     multiple=True,
-                        #     accept={
-                        #         "application/pdf": [".pdf"],
-                        #         "image/png": [".png"],
-                        #         "image/jpeg": [".jpg", ".jpeg"],
-                        #         "image/gif": [".gif"],
-                        #         "image/webp": [".webp"],
-                        #         "text/html": [".html", ".htm"],
-                        #     },
-                        #     max_files=5,
-                        #     disabled=True,
-                        #     on_keyboard=True,
+                        # accept={
+                        #     "application/pdf": [".pdf"],
+                        #     "image/png": [".png"],
+                        #     "image/jpeg": [".jpg", ".jpeg"],
+                        #     "image/gif": [".gif"],
+                        #     "image/webp": [".webp"],
+                        #     "text/html": [".html", ".htm"],
+                        # },
+                        # max_files=5,
+                        # disabled=False,
+                        # on_keyboard=True,
                         # ),
-                        rx.input(
-                            placeholder="Provide details regarding issue...",
-                            id="question",
-                            _placeholder={"color": "#fffa"},
-                            _hover={"border_color": styles.accent_color},
-                            style=styles.input_style,
-                        ),
-                        rx.button(
-                            rx.cond(
-                                State.processing,
-                                loading_icon(height="1em"),
-                                rx.text("Send"),
+                        rx.cond(
+                            State.maintenance_request_submitted,
+                            # rx.tooltip(
+                            rx.input(
+                                placeholder="Provide details regarding issue...",
+                                id="question",
+                                _placeholder={"color": "#fffa"},
+                                _hover={"border_color": styles.accent_color},
+                                style=styles.input_style,
+                                is_disabled=True,
                             ),
-                            type_="submit",
-                            _hover={"bg": styles.accent_color},
-                            style=styles.input_style,
+                            # label="Maintenance request submitted. Create a new request.",
+                            # ),
+                            rx.input(
+                                placeholder="Provide details regarding issue...",
+                                id="question",
+                                _placeholder={"color": "#fffa"},
+                                _hover={"border_color": styles.accent_color},
+                                style=styles.input_style,
+                            ),
+                        ),
+                        rx.cond(
+                            State.maintenance_request_submitted,
+                            rx.button(
+                                rx.cond(
+                                    State.question_processing,
+                                    loading_icon(height="1em"),
+                                    rx.text("Send"),
+                                ),
+                                is_disabled=True,
+                                type_="submit",
+                                _hover={"bg": styles.accent_color},
+                                style=styles.input_style,
+                            ),
+                            rx.button(
+                                rx.cond(
+                                    State.question_processing,
+                                    loading_icon(height="1em"),
+                                    rx.text("Send"),
+                                ),
+                                type_="submit",
+                                _hover={"bg": styles.accent_color},
+                                style=styles.input_style,
+                            ),
                         ),
                     ),
-                    is_disabled=State.processing,
+                    is_disabled=State.question_processing,
                 ),
                 on_submit=State.process_question,
                 reset_on_submit=True,

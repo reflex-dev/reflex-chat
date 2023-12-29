@@ -6,13 +6,17 @@ import json
 from openai import OpenAI
 import reflex as rx
 
+import asyncio
+
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
 class QuestionAnswer(rx.Base):
     """A question and answer pair."""
+
     question: str
     answer: str
+
 
 MODEL = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
 
@@ -63,7 +67,10 @@ class State(rx.State):
     question: str
 
     # Whether we are processing the question.
-    processing: bool = False
+    question_processing: bool = False
+
+    # Whether we are processing the maintenace request.
+    form_processing: bool = False
 
     # The name of the new chat.
     new_chat_name: str = ""
@@ -75,6 +82,10 @@ class State(rx.State):
     modal_open: bool = False
 
     api_type: str = "openai"
+    
+    maintenance_request_submitted: bool = False
+    
+    img: list[str]
 
     def create_chat(self):
         """Create a new chat."""
@@ -86,11 +97,16 @@ class State(rx.State):
         self.modal_open = False
 
     def submit_maintenance_request(self):
-        pass
-    
+        self.maintenance_request_submitted = True
+        self.toggle_modal()
+
     def toggle_modal(self):
         """Toggle the new chat modal."""
         self.modal_open = not self.modal_open
+
+    def toggle_form_processing(self):
+        """Toggle the new chat modal."""
+        self.form_processing = not self.form_processing
 
     def toggle_drawer(self):
         """Toggle the drawer."""
@@ -122,9 +138,30 @@ class State(rx.State):
         """
         return list(self.chats.keys())
 
+    async def handle_upload(
+        self, files: list[rx.UploadFile]
+    ):
+        """Handle the upload of file(s).
+
+        Args:
+            files: The uploaded files.
+        """
+        for file in files:
+            upload_data = await file.read()
+            outfile = f".web/public/{file.filename}"
+
+            # Save the file.
+            with open(outfile, "wb") as file_object:
+                file_object.write(upload_data)
+
+            # Update the img var.
+            self.img.append(file.filename)
+    
     async def process_question(self, form_data: Dict[str, str]):
-        # self.toggle_modal()
         # Get the question from the form
+        # if len(self.img) > 0:
+        #     self.handle_upload()
+        self.toggle_modal()
         question = form_data["question"]
 
         # Check if the question is empty
@@ -134,11 +171,19 @@ class State(rx.State):
         model = self.openai_process_question
         async for value in model(question):
             yield value
-        
+
         last_message = self.get_context()
-        
+
         if TRIGGER_KEYWORD in last_message:
-            self.toggle_modal()
+            # await self.process_maintenance()
+            self.toggle_form_processing()
+            # await asyncio.sleep(10)
+            # import time; time.sleep(5)
+            # self.toggle_modal()
+            # self.toggle_form_processing()
+
+    async def process_maintenance(self):
+        pass
         
     def get_context(self):
         """Get the combined context of question and answer from the current chat."""
@@ -159,7 +204,7 @@ class State(rx.State):
         self.chats[self.current_chat].append(question_answer)
 
         # Clear the input and start the processing.
-        self.processing = True
+        self.question_processing = True
         yield
 
         # Build the messages.
@@ -187,4 +232,4 @@ class State(rx.State):
                 yield
 
         # Toggle the processing flag.
-        self.processing = False
+        self.question_processing = False

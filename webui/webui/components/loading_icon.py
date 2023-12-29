@@ -5,7 +5,7 @@ class LoadingIcon(rx.Component):
     """A custom loading icon component."""
 
     library = "react-loading-icons"
-    tag = "SpinningCircles"
+    tag = "BallTriangle"
     stroke: rx.Var[str]
     stroke_opacity: rx.Var[str]
     fill: rx.Var[str]
@@ -24,7 +24,7 @@ class LoadingIcon(rx.Component):
     """A custom loading icon component."""
 
     library = "react-loading-icons"
-    tag = "BallTriangle"
+    tag = "Circles"
     stroke: rx.Var[str]
     stroke_opacity: rx.Var[str]
     fill: rx.Var[str]
