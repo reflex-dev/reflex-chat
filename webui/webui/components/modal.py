@@ -11,7 +11,8 @@ def modal() -> rx.Component:
                 rx.modal_header(
                     rx.vstack(
                         rx.hstack(
-                            rx.text("Add Maintenace Request"),
+                            rx.text("Add Maintenace Request",
+                                    font_size="1.8rem"),
                             rx.icon(
                                 tag="close",
                                 font_size="sm",
@@ -64,6 +65,12 @@ def modal() -> rx.Component:
                                 ),
                                 text_align="left",
                             ),
+                            display="flex",
+                            flex_direction="row",
+                            justify_content="flex-start",
+                            align_items="flex-start",
+                            align_content="flex-start",
+                            align_self="auto",
                         ),
                         rx.divider(
                             border_color="#282828",
@@ -72,14 +79,17 @@ def modal() -> rx.Component:
                             border_top="3px solid #282828",
                             border_radius="1px",
                         ),
+                        # rx.flex(
                         rx.hstack(
                             rx.vstack(
                                 rx.text("Category"),
                                 rx.select(
                                     ["HVAC", "Plumbing", "Electrical", "Other"],
                                     default_value="HVAC",
+                                    max_width="100%",
+                                    width="13vw", #TODO make this responsive
                                     # max_width="50%",
-                                    size="sm",
+                                    # size="sm",
                                 ),
                             ),
                             rx.vstack(
@@ -88,10 +98,13 @@ def modal() -> rx.Component:
                                     ["Low", "Normal", "High"],
                                     is_disabled=True,
                                     default_value="Normal",
-                                    # max_width="50%",
-                                    size="sm",
+                                    max_width="100%",
+                                    width="13vw", #TODO make this responsive
+                                    # size="sm",
                                 ),
                             ),
+                            flex="1",
+                            width="100%",
                             margin_top="1em",
                         ),
                         rx.vstack(
@@ -101,8 +114,10 @@ def modal() -> rx.Component:
                         rx.vstack(rx.text("Description"), rx.text_area()),
                     ),
                     rx.checkbox(
-                        "Authorize staff to enter your property in your absence",
-                        size="sm",
+                        rx.text("I agree to authorize entry my property in my absence.",
+                                font_size="0.95rem"
+                                ),
+                        size="md",
                         color_scheme="green",
                         # value=True,
                         margin_top="1em",

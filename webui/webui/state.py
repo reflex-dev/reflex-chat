@@ -28,6 +28,10 @@ DEFAULT_CHATS = {
     "Demo Request": [],
 }
 
+DEFAULT_REQUEST_HISTORY = {
+    "Demo Request": False,
+}
+
 ASSISTANT_SYSTEM_PROMPT = """
 You are an assistant focused on service management requests from tenants. Your goal is to gather information to put together in a formal service order form for a property manager. 
 
@@ -60,6 +64,9 @@ class State(rx.State):
     # A Dict from the chat name to the list of questions and answers.
     chats: Dict[str, List[QuestionAnswer]] = DEFAULT_CHATS
 
+    # Request history
+    request_history: Dict[str, bool] = DEFAULT_REQUEST_HISTORY
+
     # The current chat name.
     current_chat = "Demo Request"
 
@@ -82,9 +89,9 @@ class State(rx.State):
     modal_open: bool = False
 
     api_type: str = "openai"
-    
+
     maintenance_request_submitted: bool = False
-    
+
     img: list[str]
 
     def create_chat(self):
@@ -93,12 +100,20 @@ class State(rx.State):
         self.current_chat = self.new_chat_name
         self.chats[self.new_chat_name] = []
 
+        # FIX THE BELOW
+        self.request_history[self.current_chat] = False
+        self.maintenance_request_submitted = False
+
         # Toggle the modal.
         self.modal_open = False
 
+    def set_maintenance_request_history(self, maintenance_request_submitted: bool):
+        self.maintenance_request_submitted = maintenance_request_submitted
+        self.request_history[self.current_chat] = maintenance_request_submitted
+
     def submit_maintenance_request(self):
-        self.maintenance_request_submitted = True
-        self.toggle_modal()
+        self.set_maintenance_request_history(True)
+        self.modal_open = False
 
     def toggle_modal(self):
         """Toggle the new chat modal."""
@@ -128,6 +143,7 @@ class State(rx.State):
         """
         self.current_chat = chat_name
         self.toggle_drawer()
+        self.set_maintenance_request_history(self.request_history.get(chat_name))
 
     @rx.var
     def chat_titles(self) -> List[str]:
@@ -138,9 +154,7 @@ class State(rx.State):
         """
         return list(self.chats.keys())
 
-    async def handle_upload(
-        self, files: list[rx.UploadFile]
-    ):
+    async def handle_upload(self, files: list[rx.UploadFile]):
         """Handle the upload of file(s).
 
         Args:
@@ -156,7 +170,7 @@ class State(rx.State):
 
             # Update the img var.
             self.img.append(file.filename)
-    
+
     async def process_question(self, form_data: Dict[str, str]):
         # Get the question from the form
         # if len(self.img) > 0:
@@ -179,12 +193,12 @@ class State(rx.State):
             self.toggle_form_processing()
             # await asyncio.sleep(10)
             # import time; time.sleep(5)
-            # self.toggle_modal()
+            self.toggle_modal()
             # self.toggle_form_processing()
 
     async def process_maintenance(self):
         pass
-        
+
     def get_context(self):
         """Get the combined context of question and answer from the current chat."""
         context = ""
