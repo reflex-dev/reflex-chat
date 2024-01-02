@@ -85,8 +85,9 @@ def modal() -> rx.Component:
                                 rx.text("Category"),
                                 rx.select(
                                     ["HVAC", "Plumbing", "Electrical", "Other"],
-                                    default_value="HVAC",
+                                    default_value=State.category,
                                     max_width="100%",
+                                    on_change=State.set_category,
                                     width="13vw", #TODO make this responsive
                                     # max_width="50%",
                                     # size="sm",
@@ -97,7 +98,8 @@ def modal() -> rx.Component:
                                 rx.select(
                                     ["Low", "Normal", "High"],
                                     is_disabled=True,
-                                    default_value="Normal",
+                                    default_value=State.priority,
+                                    on_change=State.set_priority,
                                     max_width="100%",
                                     width="13vw", #TODO make this responsive
                                     # size="sm",
@@ -109,9 +111,11 @@ def modal() -> rx.Component:
                         ),
                         rx.vstack(
                             rx.text("Subject"),
-                            rx.input(value="AC Unit Not Working"),
+                            rx.input(value=State.subject, on_change=State.set_subject),
                         ),
-                        rx.vstack(rx.text("Description"), rx.text_area()),
+                        rx.vstack(rx.text("Description"), 
+                                  rx.text_area(value=State.description, on_change=State.set_description, height="10em"),
+                                  ),
                     ),
                     rx.checkbox(
                         rx.text("I agree to authorize entry my property in my absence.",
@@ -119,7 +123,7 @@ def modal() -> rx.Component:
                                 ),
                         size="md",
                         color_scheme="green",
-                        # value=True,
+                        is_checked=True,
                         margin_top="1em",
                     ),
                 ),

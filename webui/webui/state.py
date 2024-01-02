@@ -1,13 +1,22 @@
-from typing import List, Dict
+from typing import List, Dict, Any
 import os
 import requests
 import json
 
+from pydantic import BaseModel
 from openai import OpenAI
 import reflex as rx
 
-import asyncio
-
+from webui.services import transform_maintenance_request
+from .constants import (
+    MODEL,
+    TRIGGER_KEYWORD,
+    TEMPERATURE,
+    DEFAULT_CHATS,
+    DEFAULT_REQUEST_HISTORY,
+    SYSTEM_PROMPT,
+    DEFAULT_MAINTENANCE_REQUEST,
+)
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
@@ -16,47 +25,6 @@ class QuestionAnswer(rx.Base):
 
     question: str
     answer: str
-
-
-MODEL = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
-
-TRIGGER_KEYWORD = "SERVICE ORDER INFORMATION"
-
-TEMPERATURE = 0
-
-DEFAULT_CHATS = {
-    "Demo Request": [],
-}
-
-DEFAULT_REQUEST_HISTORY = {
-    "Demo Request": False,
-}
-
-ASSISTANT_SYSTEM_PROMPT = """
-You are an assistant focused on service management requests from tenants. Your goal is to gather information to put together in a formal service order form for a property manager. 
-
-===========
-You will follow these guidelines:
-1. If there is not enough suitable information form a tenant you will prompt follow-up questions, if needed, till you have suitable information of the issue / situation. 
-2. Try to limit the amount of follow-up questions required. 
-3. Ask one follow-up question at a time if needed. 
-4. If you do ask follow-up questions you are allowed a MAXIMUM of 3 follow-up questions. 
-5. Once you have suitable information start your output message as ***SERVICE ORDER INFORMATION**:
-===========
-
-===========
-Here is an example of a suitable service order: 
-I am reaching out to report a maintenance issue that has recently occurred in my apartment, specifically concerning a broken window in the living room. The damage was caused by a storm, where a fallen tree branch impacted the windowpane, resulting in its shattering. This window is located on the east side of the building, facing the courtyard. Currently, the broken glass presents a significant safety hazard, and the opening has left the apartment vulnerable to environmental elements such as wind and rain. While the glass is extensively fractured, the window frame remains largely undamaged. To mitigate immediate risks, I have temporarily covered the window with plastic sheeting. This measure is intended to prevent further damage from weather conditions and to maintain safety within the apartment.
-===========
-
-===========
-Here is an example of a non-suitable service order:
-I have a broken window. 
-===========
-
-FOLLOW THESE GUIDELINES, OR YOU WILL BE FIRED.
-"""
-
 
 class State(rx.State):
     """The app state."""
@@ -94,6 +62,36 @@ class State(rx.State):
 
     img: list[str]
 
+    maintenance_request_data: Dict[Any, Any] = DEFAULT_MAINTENANCE_REQUEST
+
+    def set_category(self, category: str):
+        self.maintenance_request_data["CategoryId"] = category
+    
+    def set_subject(self, subject: str):
+        self.maintenance_request_data["Subject"] = subject
+        
+    def set_description(self, description: str):
+        self.maintenance_request_data["Description"] = description
+    
+    def set_priority(self, priority: str):
+        self.maintenance_request_data["TaskPriority"] = priority
+    
+    @rx.var
+    def priority(self) -> str:
+        return self.maintenance_request_data["TaskPriority"]
+    
+    @rx.var
+    def description(self) -> str:
+        return self.maintenance_request_data["Description"]
+    
+    @rx.var
+    def subject(self) -> str:
+        return self.maintenance_request_data["Subject"]
+    
+    @rx.var
+    def category(self) -> str:
+        return self.maintenance_request_data["CategoryId"]
+    
     def create_chat(self):
         """Create a new chat."""
         # Add the new chat to the list of chats.
@@ -175,7 +173,7 @@ class State(rx.State):
         # Get the question from the form
         # if len(self.img) > 0:
         #     self.handle_upload()
-        self.toggle_modal()
+        # self.toggle_modal()
         question = form_data["question"]
 
         # Check if the question is empty
@@ -186,18 +184,29 @@ class State(rx.State):
         async for value in model(question):
             yield value
 
+    async def process_form(self):
         last_message = self.get_context()
-
         if TRIGGER_KEYWORD in last_message:
-            # await self.process_maintenance()
-            self.toggle_form_processing()
-            # await asyncio.sleep(10)
-            # import time; time.sleep(5)
+            self.form_processing = True
+            await self.process_maintenance(last_message)
             self.toggle_modal()
-            # self.toggle_form_processing()
+            self.form_processing = False
 
-    async def process_maintenance(self):
-        pass
+    async def process(self, form_data: Dict[str, str]):
+        async for response in self.process_question(form_data):
+            yield response
+        await self.process_form()
+
+    @rx.var
+    def maintenance_request(self): # -> MaintenanceRequest:
+        return self.maintenance_request_data
+        # return MaintenanceRequest(**self.maintenance_request_data)
+
+    async def process_maintenance(self, form_data: str):
+        maintenance_request = await transform_maintenance_request(form_data)
+        maintenance_request = maintenance_request["data"]
+        self.maintenance_request_data = maintenance_request
+        return maintenance_request
 
     def get_context(self):
         """Get the combined context of question and answer from the current chat."""
@@ -222,7 +231,7 @@ class State(rx.State):
         yield
 
         # Build the messages.
-        messages = [{"role": "system", "content": ASSISTANT_SYSTEM_PROMPT}]
+        messages = [{"role": "system", "content": SYSTEM_PROMPT}]
         for question_answer in self.chats[self.current_chat]:
             messages.extend(
                 (

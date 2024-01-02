@@ -167,7 +167,7 @@ def action_bar() -> rx.Component:
                     ),
                     is_disabled=State.question_processing,
                 ),
-                on_submit=State.process_question,
+                on_submit=State.process,
                 reset_on_submit=True,
                 width="100%",
             ),
