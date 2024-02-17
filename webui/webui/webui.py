@@ -26,4 +26,3 @@ def index() -> rx.Component:
 # Add state and page to the app.
 app = rx.App(style=styles.base_style)
 app.add_page(index)
-app.compile()
