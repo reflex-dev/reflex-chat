@@ -14,9 +14,9 @@ def message(qa: QA) -> rx.Component:
     Returns:
         A component displaying the question/answer pair.
     """
-    return rx.box(
-        rx.box(
-            rx.text(
+    return rx.chakra.box(
+        rx.chakra.box(
+            rx.chakra.text(
                 qa.question,
                 bg=styles.border_color,
                 shadow=styles.shadow_light,
@@ -25,8 +25,8 @@ def message(qa: QA) -> rx.Component:
             text_align="right",
             margin_top="1em",
         ),
-        rx.box(
-            rx.text(
+        rx.chakra.box(
+            rx.chakra.text(
                 qa.answer,
                 bg=styles.accent_color,
                 shadow=styles.shadow_light,
@@ -41,8 +41,8 @@ def message(qa: QA) -> rx.Component:
 
 def chat() -> rx.Component:
     """List all the messages in a single conversation."""
-    return rx.vstack(
-        rx.box(rx.foreach(State.chats[State.current_chat], message)),
+    return rx.chakra.vstack(
+        rx.chakra.box(rx.foreach(State.chats[State.current_chat], message)),
         py="8",
         flex="1",
         width="100%",
@@ -56,23 +56,23 @@ def chat() -> rx.Component:
 
 def action_bar() -> rx.Component:
     """The action bar to send a new message."""
-    return rx.box(
-        rx.vstack(
-            rx.form(
-                rx.form_control(
-                    rx.hstack(
-                        rx.input(
+    return rx.chakra.box(
+        rx.chakra.vstack(
+            rx.chakra.form(
+                rx.chakra.form_control(
+                    rx.chakra.hstack(
+                        rx.chakra.input(
                             placeholder="Type something...",
                             id="question",
                             _placeholder={"color": "#fffa"},
                             _hover={"border_color": styles.accent_color},
                             style=styles.input_style,
                         ),
-                        rx.button(
+                        rx.chakra.button(
                             rx.cond(
                                 State.processing,
                                 loading_icon(height="1em"),
-                                rx.text("Send"),
+                                rx.chakra.text("Send"),
                             ),
                             type_="submit",
                             _hover={"bg": styles.accent_color},
@@ -85,7 +85,7 @@ def action_bar() -> rx.Component:
                 reset_on_submit=True,
                 width="100%",
             ),
-            rx.text(
+            rx.chakra.text(
                 "ReflexGPT may return factually incorrect or misleading responses. Use discretion.",
                 font_size="xs",
                 color="#fff6",

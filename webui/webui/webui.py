@@ -9,7 +9,7 @@ from webui.state import State
 
 def index() -> rx.Component:
     """The main app."""
-    return rx.vstack(
+    return rx.chakra.vstack(
         navbar(),
         chat.chat(),
         chat.action_bar(),
@@ -26,4 +26,3 @@ def index() -> rx.Component:
 # Add state and page to the app.
 app = rx.App(style=styles.base_style)
 app.add_page(index)
-app.compile()
