@@ -7,7 +7,7 @@ def sidebar_chat(chat: str) -> rx.Component:
     Args:
         chat: The chat item.
     """
-    return rx.hstack(
+    return  rx.drawer.close(rx.hstack(
         rx.button(
             chat, on_click=lambda: State.set_chat(chat), width="80%", variant="surface"
         ),
@@ -22,7 +22,7 @@ def sidebar_chat(chat: str) -> rx.Component:
             color_scheme="red",
         ),
         width="100%",
-    )
+    ))
 
 
 def sidebar(trigger) -> rx.Component:
