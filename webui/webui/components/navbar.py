@@ -81,8 +81,8 @@ def navbar():
     return rx.box(
         rx.hstack(
             rx.hstack(
-                rx.avatar(fallback="CC", variant="solid"),
-                rx.heading("Coca-Cola"),
+                rx.avatar(fallback="RC", variant="solid"),
+                rx.heading("Reflex Chat"),
                 rx.badge(
                     State.current_chat,
                     rx.tooltip(rx.icon("info", size=14), content="The current selected chat."),
