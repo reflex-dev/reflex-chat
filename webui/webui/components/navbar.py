@@ -61,7 +61,7 @@ def modal(trigger) -> rx.Component:
                 rx.input(
                     placeholder="Type something...",
                     on_blur=State.set_new_chat_name,
-                    width="30em",
+                    width=["15em", "20em", "30em", "30em", "30em", "30em"],
                 ),
                 rx.dialog.close(
                     rx.button(
