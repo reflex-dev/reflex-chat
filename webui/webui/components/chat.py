@@ -4,7 +4,7 @@ from webui.components import loading_icon
 from webui.state import QA, State
 
 
-message_style = dict(display="inline-block", p="4", border_radius="xl", max_w="30em")
+message_style = dict(display="inline-block", padding="4px", border_radius="8px", max_width="30em")
 
 
 def message(qa: QA) -> rx.Component:
@@ -18,7 +18,7 @@ def message(qa: QA) -> rx.Component:
     """
     return rx.box(
         rx.box(
-            rx.chakra.text(
+            rx.text(
                 qa.question,
                 background_color=rx.color("mauve", 4),
                 color=rx.color("mauve", 12),
@@ -28,7 +28,7 @@ def message(qa: QA) -> rx.Component:
             margin_top="1em",
         ),
         rx.box(
-            rx.chakra.text(
+            rx.text(
                 qa.answer,
                 background_color=rx.color("accent", 4),
                 color=rx.color("accent", 12),
