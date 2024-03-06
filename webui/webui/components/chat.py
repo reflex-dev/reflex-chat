@@ -67,7 +67,7 @@ def action_bar() -> rx.Component:
                             rx.radix.text_field.input(
                                 placeholder="Type something...",
                                 id="question",
-                                width="30em",
+                                width=["15em", "30em", "30em"],
                             ),
                             rx.radix.text_field.slot(
                                 rx.tooltip(
