@@ -1,8 +1,10 @@
 import reflex as rx
 
-from webui import styles
 from webui.components import loading_icon
 from webui.state import QA, State
+
+
+message_style = dict(display="inline-block", p="4", border_radius="xl", max_w="30em")
 
 
 def message(qa: QA) -> rx.Component:
@@ -14,23 +16,23 @@ def message(qa: QA) -> rx.Component:
     Returns:
         A component displaying the question/answer pair.
     """
-    return rx.chakra.box(
-        rx.chakra.box(
+    return rx.box(
+        rx.box(
             rx.chakra.text(
                 qa.question,
-                bg=styles.border_color,
-                shadow=styles.shadow_light,
-                **styles.message_style,
+                background_color=rx.color("mauve", 4),
+                color=rx.color("mauve", 12),
+                **message_style,
             ),
             text_align="right",
             margin_top="1em",
         ),
-        rx.chakra.box(
+        rx.box(
             rx.chakra.text(
                 qa.answer,
-                bg=styles.accent_color,
-                shadow=styles.shadow_light,
-                **styles.message_style,
+                background_color=rx.color("accent", 4),
+                color=rx.color("accent", 12),
+                **message_style,
             ),
             text_align="left",
             padding_top="1em",
@@ -41,13 +43,13 @@ def message(qa: QA) -> rx.Component:
 
 def chat() -> rx.Component:
     """List all the messages in a single conversation."""
-    return rx.chakra.vstack(
-        rx.chakra.box(rx.foreach(State.chats[State.current_chat], message)),
+    return rx.vstack(
+        rx.box(rx.foreach(State.chats[State.current_chat], message), width="100%"),
         py="8",
         flex="1",
         width="100%",
-        max_w="3xl",
-        padding_x="4",
+        max_width="60em",
+        padding_x="4px",
         align_self="center",
         overflow="hidden",
         padding_bottom="5em",
@@ -56,52 +58,54 @@ def chat() -> rx.Component:
 
 def action_bar() -> rx.Component:
     """The action bar to send a new message."""
-    return rx.chakra.box(
-        rx.chakra.vstack(
+    return rx.center(
+        rx.vstack(
             rx.chakra.form(
                 rx.chakra.form_control(
-                    rx.chakra.hstack(
-                        rx.chakra.input(
-                            placeholder="Type something...",
-                            id="question",
-                            _placeholder={"color": "#fffa"},
-                            _hover={"border_color": styles.accent_color},
-                            style=styles.input_style,
+                    rx.hstack(
+                        rx.radix.text_field.root(
+                            rx.radix.text_field.input(
+                                placeholder="Type something...",
+                                id="question",
+                                width="30em",
+                            ),
+                            rx.radix.text_field.slot(
+                                rx.tooltip(
+                                    rx.icon("info", size=18),
+                                    content="Enter a question to get a response.",
+                                )
+                            ),
                         ),
-                        rx.chakra.button(
+                        rx.button(
                             rx.cond(
                                 State.processing,
                                 loading_icon(height="1em"),
                                 rx.chakra.text("Send"),
                             ),
                             type_="submit",
-                            _hover={"bg": styles.accent_color},
-                            style=styles.input_style,
                         ),
                     ),
                     is_disabled=State.processing,
                 ),
                 on_submit=State.process_question,
                 reset_on_submit=True,
-                width="100%",
             ),
-            rx.chakra.text(
+            rx.text(
                 "ReflexGPT may return factually incorrect or misleading responses. Use discretion.",
-                font_size="xs",
-                color="#fff6",
                 text_align="center",
+                font_size=".75em",
+                color=rx.color("mauve", 10),
             ),
-            width="100%",
-            max_w="3xl",
-            mx="auto",
+            align_items="center",
         ),
         position="sticky",
         bottom="0",
         left="0",
-        py="4",
+        padding_y="16px",
         backdrop_filter="auto",
         backdrop_blur="lg",
-        border_top=f"1px solid {styles.border_color}",
+        border_top=f"1px solid {rx.color('mauve', 3)}",
+        background_color=rx.color("mauve", 2),
         align_items="stretch",
         width="100%",
     )
