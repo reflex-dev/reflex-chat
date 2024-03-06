@@ -76,7 +76,7 @@ def action_bar() -> rx.Component:
                                 )
                             ),
                         ),
-                        rx.button(
+                        rx.chakra.button(
                             rx.cond(
                                 State.processing,
                                 loading_icon(height="1em"),
@@ -90,7 +90,7 @@ def action_bar() -> rx.Component:
                 on_submit=State.process_question,
                 reset_on_submit=True,
             ),
-            rx.text(
+            rx.chakra.text(
                 "ReflexGPT may return factually incorrect or misleading responses. Use discretion.",
                 text_align="center",
                 font_size=".75em",
