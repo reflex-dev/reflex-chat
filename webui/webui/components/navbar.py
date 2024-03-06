@@ -1,7 +1,6 @@
 import reflex as rx
 from webui.state import State
 
-
 def sidebar_chat(chat: str) -> rx.Component:
     """A sidebar chat item.
 
