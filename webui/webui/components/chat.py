@@ -76,7 +76,7 @@ def action_bar() -> rx.Component:
                                 )
                             ),
                         ),
-                        rx.chakra.button(
+                        rx.button(
                             rx.cond(
                                 State.processing,
                                 loading_icon(height="1em"),
@@ -84,6 +84,7 @@ def action_bar() -> rx.Component:
                             ),
                             type_="submit",
                         ),
+                        align_items="center",
                     ),
                     is_disabled=State.processing,
                 ),
