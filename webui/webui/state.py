@@ -2,7 +2,18 @@ import os
 import reflex as rx
 from openai import OpenAI
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+_client = None
+
+
+def get_openai_client():
+    global _client
+    if _client is None:
+        _client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+    return _client
+
+#client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client = get_openai_client()
 
 # Checking if the API key is set properly
 if not os.getenv("OPENAI_API_KEY"):
