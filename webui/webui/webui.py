@@ -22,7 +22,7 @@ def index() -> rx.Component:
 app = rx.App(
     theme=rx.theme(
         appearance="dark",
-        accent_color="violet",
+        accent_color="red",
     ),
 )
 app.add_page(index)
