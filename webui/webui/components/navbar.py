@@ -1,68 +1,129 @@
 import reflex as rx
-
-from webui import styles
 from webui.state import State
+
+def sidebar_chat(chat: str) -> rx.Component:
+    """A sidebar chat item.
+
+    Args:
+        chat: The chat item.
+    """
+    return  rx.drawer.close(rx.hstack(
+        rx.button(
+            chat, on_click=lambda: State.set_chat(chat), width="80%", variant="surface"
+        ),
+        rx.button(
+            rx.icon(
+                tag="trash",
+                on_click=State.delete_chat,
+                stroke_width=1,
+            ),
+            width="20%",
+            variant="surface",
+            color_scheme="red",
+        ),
+        width="100%",
+    ))
+
+
+def sidebar(trigger) -> rx.Component:
+    """The sidebar component."""
+    return rx.drawer.root(
+        rx.drawer.trigger(trigger),
+        rx.drawer.overlay(),
+        rx.drawer.portal(
+            rx.drawer.content(
+                rx.vstack(
+                    rx.heading("Chats", color=rx.color("mauve", 11)),
+                    rx.divider(),
+                    rx.foreach(State.chat_titles, lambda chat: sidebar_chat(chat)),
+                    align_items="stretch",
+                    width="100%",
+                ),
+                top="auto",
+                right="auto",
+                height="100%",
+                width="20em",
+                padding="2em",
+                background_color=rx.color("mauve", 2),
+                outline="none",
+            )
+        ),
+        direction="left",
+    )
+
+
+def modal(trigger) -> rx.Component:
+    """A modal to create a new chat."""
+    return rx.dialog.root(
+        rx.dialog.trigger(trigger),
+        rx.dialog.content(
+            rx.hstack(
+                rx.input(
+                    placeholder="Type something...",
+                    on_blur=State.set_new_chat_name,
+                    width=["15em", "20em", "30em", "30em", "30em", "30em"],
+                ),
+                rx.dialog.close(
+                    rx.button(
+                        "Create chat",
+                        on_click=State.create_chat,
+                    ),
+                ),
+                background_color=rx.color("mauve", 1),
+                spacing="2",
+                width="100%",
+            ),
+        ),
+    )
 
 
 def navbar():
-    return rx.chakra.box(
-        rx.chakra.hstack(
-            rx.chakra.hstack(
-                rx.chakra.icon(
-                    tag="hamburger",
-                    mr=4,
-                    on_click=State.toggle_drawer,
-                    cursor="pointer",
+    return rx.box(
+        rx.hstack(
+            rx.hstack(
+                rx.avatar(fallback="RC", variant="solid"),
+                rx.heading("Reflex Chat"),
+                rx.desktop_only(
+                    rx.badge(
+                    State.current_chat,
+                    rx.tooltip(rx.icon("info", size=14), content="The current selected chat."),
+                    variant="soft"
+                    )
                 ),
-                rx.chakra.link(
-                    rx.chakra.box(
-                        rx.chakra.image(src="favicon.ico", width=30, height="auto"),
-                        p="1",
-                        border_radius="6",
-                        bg="#F0F0F0",
-                        mr="2",
-                    ),
-                    href="/",
-                ),
-                rx.chakra.breadcrumb(
-                    rx.chakra.breadcrumb_item(
-                        rx.chakra.heading("ReflexGPT", size="sm"),
-                    ),
-                    rx.chakra.breadcrumb_item(
-                        rx.chakra.text(State.current_chat, size="sm", font_weight="normal"),
-                    ),
-                ),
+                align_items="center",
             ),
-            rx.chakra.hstack(
-                rx.chakra.button(
-                    "+ New chat",
-                    bg=styles.accent_color,
-                    px="4",
-                    py="2",
-                    h="auto",
-                    on_click=State.toggle_modal,
+            rx.hstack(
+                modal(rx.button("+ New chat")),
+                sidebar(
+                    rx.button(
+                        rx.icon(
+                            tag="messages-square",
+                            color=rx.color("mauve", 12),
+                        ),
+                        background_color=rx.color("mauve", 6),
+                    )
                 ),
-                rx.chakra.menu(
-                    rx.chakra.menu_button(
-                        rx.chakra.avatar(name="User", size="md"),
-                        rx.chakra.box(),
-                    ),
-                    rx.chakra.menu_list(
-                        rx.chakra.menu_item("Help"),
-                        rx.chakra.menu_divider(),
-                        rx.chakra.menu_item("Settings"),
-                    ),
+                rx.desktop_only(
+                    rx.button(
+                        rx.icon(
+                            tag="sliders-horizontal",
+                            color=rx.color("mauve", 12),
+                        ),
+                        background_color=rx.color("mauve", 6),
+                    )
                 ),
-                spacing="8",
+                align_items="center",
             ),
-            justify="space-between",
+            justify_content="space-between",
+            align_items="center",
         ),
-        bg=styles.bg_dark_color,
         backdrop_filter="auto",
         backdrop_blur="lg",
-        p="4",
-        border_bottom=f"1px solid {styles.border_color}",
+        padding="12px",
+        border_bottom=f"1px solid {rx.color('mauve', 3)}",
+        background_color=rx.color("mauve", 2),
         position="sticky",
         top="0",
         z_index="100",
+        align_items="center",
     )
