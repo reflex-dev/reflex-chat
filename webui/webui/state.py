@@ -3,10 +3,15 @@ import reflex as rx
 from openai import OpenAI
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+assistant_id = os.getenv("ASSISTANT_ID")
 
 # Checking if the API key is set properly
 if not os.getenv("OPENAI_API_KEY"):
     raise Exception("Please set OPENAI_API_KEY environment variable.")
+
+# Checking if the assistant key is set properly
+if not os.getenv("ASSISTANT_ID"):
+    raise Exception("Please set ASSISTANT_ID environment variable.")
 
 
 class QA(rx.Base):
@@ -97,38 +102,41 @@ class State(rx.State):
         self.processing = True
         yield
 
-        # Build the messages.
-        messages = [
-            {"role": "system", "content": "You are a friendly chatbot named Reflex. Respond in markdown."}
-        ]
+        thread = client.beta.threads.create()
         for qa in self.chats[self.current_chat]:
-            messages.append({"role": "user", "content": qa.question})
-            messages.append({"role": "assistant", "content": qa.answer})
+            message_user = client.beta.threads.messages.create(
+                thread_id=thread.id,
+                role="user",
+                content=qa.question,
+            )
 
-        # Remove the last mock answer.
-        messages = messages[:-1]
-
-        # Start a new session to answer the question.
-        session = client.chat.completions.create(
-            model=os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"),
-            messages=messages,
-            stream=True,
+        run = client.beta.threads.runs.create(
+            thread_id=thread.id, assistant_id=assistant_id
         )
 
-        # Stream the results, yielding after every word.
-        for item in session:
-            if hasattr(item.choices[0].delta, "content"):
-                answer_text = item.choices[0].delta.content
-                # Ensure answer_text is not None before concatenation
-                if answer_text is not None:
-                    self.chats[self.current_chat][-1].answer += answer_text
-                else:
-                    # Handle the case where answer_text is None, perhaps log it or assign a default value
-                    # For example, assigning an empty string if answer_text is None
-                    answer_text = ""
-                    self.chats[self.current_chat][-1].answer += answer_text
-                self.chats = self.chats
-                yield
+        # Periodically retrieve the Run to check status and see if it has completed
+        while run.status != "completed":
+            keep_retrieving_run = client.beta.threads.runs.retrieve(
+                thread_id=thread.id, run_id=run.id
+            )
+
+            if keep_retrieving_run.status == "completed":
+                break
+
+        # Retrieve messages added by the Assistant to the thread
+        all_messages = client.beta.threads.messages.list(thread_id=thread.id)
+        answer_text = all_messages.data[0].content[0].text.value
+
+        if answer_text is not None:
+            self.chats[self.current_chat][-1].answer += answer_text
+        else:
+            # Handle the case where answer_text is None, perhaps log it or assign a default value
+            # For example, assigning an empty string if answer_text is None
+            answer_text = ""
+            self.chats[self.current_chat][-1].answer += answer_text
+
+        self.chats = self.chats
+        yield
 
         # Toggle the processing flag.
         self.processing = False
