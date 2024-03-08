@@ -12,8 +12,6 @@ def get_openai_client():
 
     return _client
 
-#client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-client = get_openai_client()
 
 # Checking if the API key is set properly
 if not os.getenv("OPENAI_API_KEY"):
@@ -110,7 +108,10 @@ class State(rx.State):
 
         # Build the messages.
         messages = [
-            {"role": "system", "content": "You are a friendly chatbot named Reflex. Respond in markdown."}
+            {
+                "role": "system",
+                "content": "You are a friendly chatbot named Reflex. Respond in markdown.",
+            }
         ]
         for qa in self.chats[self.current_chat]:
             messages.append({"role": "user", "content": qa.question})
@@ -120,7 +121,7 @@ class State(rx.State):
         messages = messages[:-1]
 
         # Start a new session to answer the question.
-        session = client.chat.completions.create(
+        session = get_openai_client().chat.completions.create(
             model=os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"),
             messages=messages,
             stream=True,
