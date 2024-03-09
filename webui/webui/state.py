@@ -2,7 +2,15 @@ import os
 import reflex as rx
 from openai import OpenAI
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+_client = None
+
+def get_openai_client():
+    global _client
+    if _client is None:
+        _client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+    return _client
+
 assistant_id = os.getenv("ASSISTANT_ID")
 
 # Checking if the API key is set properly
@@ -101,22 +109,22 @@ class State(rx.State):
         # Clear the input and start the processing.
         self.processing = True
         yield
-
-        thread = client.beta.threads.create()
+        
+        thread = get_openai_client().beta.threads.create()
         for qa in self.chats[self.current_chat]:
-            message_user = client.beta.threads.messages.create(
+            message_user = get_openai_client().beta.threads.messages.create(
                 thread_id=thread.id,
                 role="user",
                 content=qa.question,
             )
 
-        run = client.beta.threads.runs.create(
+        run = get_openai_client().beta.threads.runs.create(
             thread_id=thread.id, assistant_id=assistant_id
         )
 
         # Periodically retrieve the Run to check status and see if it has completed
         while run.status != "completed":
-            keep_retrieving_run = client.beta.threads.runs.retrieve(
+            keep_retrieving_run = get_openai_client().beta.threads.runs.retrieve(
                 thread_id=thread.id, run_id=run.id
             )
 
@@ -124,7 +132,7 @@ class State(rx.State):
                 break
 
         # Retrieve messages added by the Assistant to the thread
-        all_messages = client.beta.threads.messages.list(thread_id=thread.id)
+        all_messages = get_openai_client().beta.threads.messages.list(thread_id=thread.id)
         answer_text = all_messages.data[0].content[0].text.value
 
         if answer_text is not None:
