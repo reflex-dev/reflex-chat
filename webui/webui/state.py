@@ -4,12 +4,14 @@ from openai import OpenAI
 
 _client = None
 
+
 def get_openai_client():
     global _client
     if _client is None:
         _client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
     return _client
+
 
 assistant_id = os.getenv("ASSISTANT_ID")
 
@@ -30,7 +32,7 @@ class QA(rx.Base):
 
 
 DEFAULT_CHATS = {
-    "Intros": [],
+    "Intros": {"id": "", "messages": []},
 }
 
 
@@ -38,7 +40,7 @@ class State(rx.State):
     """The app state."""
 
     # A dict from the chat name to the list of questions and answers.
-    chats: dict[str, list[QA]] = DEFAULT_CHATS
+    chats: dict[str, dict[str, list[QA]]] = DEFAULT_CHATS
 
     # The current chat name.
     current_chat = "Intros"
@@ -104,19 +106,25 @@ class State(rx.State):
 
         # Add the question to the list of questions.
         qa = QA(question=question, answer="")
-        self.chats[self.current_chat].append(qa)
+        self.chats[self.current_chat]["messages"].append(qa)
 
         # Clear the input and start the processing.
         self.processing = True
         yield
-        
-        thread = get_openai_client().beta.threads.create()
-        for qa in self.chats[self.current_chat]:
-            message_user = get_openai_client().beta.threads.messages.create(
-                thread_id=thread.id,
-                role="user",
-                content=qa.question,
+
+        if self.chats[self.current_chat]["id"] == "":
+            thread = get_openai_client().beta.threads.create()
+            self.chats[self.current_chat]["id"] = thread.id
+        else:
+            thread = get_openai_client().beta.threads.retrieve(
+                thread_id=self.chats[self.current_chat]["id"]
             )
+
+        get_openai_client().beta.threads.messages.create(
+            thread_id=thread.id,
+            role="user",
+            content=qa.question,
+        )
 
         run = get_openai_client().beta.threads.runs.create(
             thread_id=thread.id, assistant_id=assistant_id
@@ -131,17 +139,25 @@ class State(rx.State):
             if keep_retrieving_run.status == "completed":
                 break
 
+            if keep_retrieving_run.status == "failed":
+                self.processing = False
+                yield rx.window_alert("OpenAI Request Failed!.")
+                return
+
         # Retrieve messages added by the Assistant to the thread
-        all_messages = get_openai_client().beta.threads.messages.list(thread_id=thread.id)
+        all_messages = get_openai_client().beta.threads.messages.list(
+            thread_id=thread.id
+        )
+
         answer_text = all_messages.data[0].content[0].text.value
 
         if answer_text is not None:
-            self.chats[self.current_chat][-1].answer += answer_text
+            self.chats[self.current_chat]["messages"][-1].answer += answer_text
         else:
             # Handle the case where answer_text is None, perhaps log it or assign a default value
             # For example, assigning an empty string if answer_text is None
             answer_text = ""
-            self.chats[self.current_chat][-1].answer += answer_text
+            self.chats[self.current_chat]["messages"][-1].answer += answer_text
 
         self.chats = self.chats
         yield

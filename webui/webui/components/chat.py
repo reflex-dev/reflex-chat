@@ -49,7 +49,10 @@ def message(qa: QA) -> rx.Component:
 def chat() -> rx.Component:
     """List all the messages in a single conversation."""
     return rx.vstack(
-        rx.box(rx.foreach(State.chats[State.current_chat], message), width="100%"),
+        rx.box(
+            rx.foreach(State.chats[State.current_chat]["messages"], message),
+            width="100%",
+        ),
         py="8",
         flex="1",
         width="100%",
