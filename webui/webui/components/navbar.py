@@ -112,15 +112,15 @@ def navbar():
                         background_color=rx.color("mauve", 6),
                     )
                 ),
-                rx.desktop_only(
-                    rx.button(
-                        rx.icon(
-                            tag="sliders-horizontal",
-                            color=rx.color("mauve", 12),
-                        ),
-                        background_color=rx.color("mauve", 6),
-                    )
-                ),
+                # rx.desktop_only(
+                #     rx.button(
+                #         rx.icon(
+                #             tag="sliders-horizontal",
+                #             color=rx.color("mauve", 12),
+                #         ),
+                #         background_color=rx.color("mauve", 6),
+                #     )
+                # ),
                 align_items="center",
             ),
             justify_content="space-between",

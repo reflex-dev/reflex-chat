@@ -15,6 +15,8 @@ def get_openai_client():
 
 assistant_id = os.getenv("ASSISTANT_ID")
 
+PASSWORD = os.getenv("PASSWORD")
+
 # Checking if the API key is set properly
 if not os.getenv("OPENAI_API_KEY"):
     raise Exception("Please set OPENAI_API_KEY environment variable.")
@@ -39,6 +41,10 @@ DEFAULT_CHATS = {
 class State(rx.State):
     """The app state."""
 
+    password: str = ""
+
+    correct_password: bool = False
+
     # A dict from the chat name to the list of questions and answers.
     chats: dict[str, dict[str, list[QA]]] = DEFAULT_CHATS
 
@@ -54,11 +60,17 @@ class State(rx.State):
     # The name of the new chat.
     new_chat_name: str = ""
 
+    def check_password(self):
+        if PASSWORD == self.password:
+            self.correct_password = True
+        else:
+            return rx.window_alert("Invalid password.")
+
     def create_chat(self):
         """Create a new chat."""
         # Add the new chat to the list of chats.
         self.current_chat = self.new_chat_name
-        self.chats[self.new_chat_name] = []
+        self.chats[self.new_chat_name] = {"id": "", "messages": []}
 
     def delete_chat(self):
         """Delete the current chat."""
@@ -141,7 +153,7 @@ class State(rx.State):
 
             if keep_retrieving_run.status == "failed":
                 self.processing = False
-                yield rx.window_alert("OpenAI Request Failed!.")
+                yield rx.window_alert("OpenAI Request Failed! Try asking again.")
                 return
 
         # Retrieve messages added by the Assistant to the thread
