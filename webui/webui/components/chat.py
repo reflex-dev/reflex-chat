@@ -48,7 +48,7 @@ def chat() -> rx.Component:
         py="8",
         flex="1",
         width="100%",
-        max_width="60em",
+        max_width="50em",
         padding_x="4px",
         align_self="center",
         overflow="hidden",
@@ -67,7 +67,7 @@ def action_bar() -> rx.Component:
                             rx.radix.text_field.input(
                                 placeholder="Type something...",
                                 id="question",
-                                width=["15em", "20em", "30em", "30em", "30em", "30em"],
+                                width=["15em", "20em", "45em", "50em", "50em", "50em"],
                             ),
                             rx.radix.text_field.slot(
                                 rx.tooltip(
