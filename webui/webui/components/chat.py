@@ -82,7 +82,7 @@ def action_bar() -> rx.Component:
                                 loading_icon(height="1em"),
                                 rx.text("Send"),
                             ),
-                            type_="submit",
+                            type="submit",
                         ),
                         align_items="center",
                     ),
