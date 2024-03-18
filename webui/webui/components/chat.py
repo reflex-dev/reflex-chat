@@ -18,7 +18,7 @@ def message(qa: QA) -> rx.Component:
     """
     return rx.box(
         rx.box(
-            rx.text(
+            rx.markdown(
                 qa.question,
                 background_color=rx.color("mauve", 4),
                 color=rx.color("mauve", 12),
