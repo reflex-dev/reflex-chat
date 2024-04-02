@@ -28,18 +28,17 @@ To get started with Reflex, you'll need:
 - Node.js 12.22.0+ \(No JavaScript knowledge required!\)
 - Pip dependencies: `reflex`, `openai`
 
-Install `pip` dependencies with the provided `webui/requirements.txt`:
+Install `pip` dependencies with the provided `requirements.txt`:
 
 ```bash
-pip install -r reflex-chat/webui/requirements.txt
+pip install -r requirements.txt
 ```
 
 ### 🚀 3. Run the application
 
-Navigate to the `webui/` directory, initialize and run the app:
+Initialize and run the app:
 
 ```
-cd reflex-chat/webui/
 reflex init
 reflex run
 ```

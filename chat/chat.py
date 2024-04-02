@@ -1,7 +1,7 @@
 """The main Chat app."""
 
 import reflex as rx
-from webui.components import chat, navbar
+from chat.components import chat, navbar
 
 
 def index() -> rx.Component:

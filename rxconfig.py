@@ -2,5 +2,5 @@ import reflex as rx
 
 
 config = rx.Config(
-    app_name="webui",
+    app_name="chat",
 )

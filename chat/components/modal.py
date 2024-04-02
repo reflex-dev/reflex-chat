@@ -1,5 +1,5 @@
 import reflex as rx
-from webui.state import State
+from chat.state import State
 
 
 def modal() -> rx.Component:
