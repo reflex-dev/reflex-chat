@@ -1,6 +1,0 @@
-*.db
-*.py[cod]
-.vscode
-.web
-__pycache__/
-reflex.db

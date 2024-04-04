@@ -97,6 +97,7 @@ def action_bar() -> rx.Component:
                 font_size=".75em",
                 color=rx.color("mauve", 10),
             ),
+            rx.logo(margin_top="-1em", margin_bottom="-1em"),
             align_items="center",
         ),
         position="sticky",
