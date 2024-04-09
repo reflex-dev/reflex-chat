@@ -2,16 +2,6 @@ import os
 import reflex as rx
 from openai import OpenAI
 
-_client = None
-
-
-def get_openai_client():
-    global _client
-    if _client is None:
-        _client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-    return _client
-
 
 # Checking if the API key is set properly
 if not os.getenv("OPENAI_API_KEY"):
@@ -121,7 +111,7 @@ class State(rx.State):
         messages = messages[:-1]
 
         # Start a new session to answer the question.
-        session = get_openai_client().chat.completions.create(
+        session = OpenAI().chat.completions.create(
             model=os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"),
             messages=messages,
             stream=True,
