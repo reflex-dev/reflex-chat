@@ -11,6 +11,6 @@ jobs:
         uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.HOSTING_REPOSITORY_DISPATCH }}
-          repository: reflex-dev/reflex-hosting
+          repository: reflex-dev/reflex-hosting-cli
           event-type: push
           client-payload: '{"repo": "${{ github.repository }}", "sha": "${{ github.sha }}", "deployment-key": "chat"}'
