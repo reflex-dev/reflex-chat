@@ -13,4 +13,4 @@ jobs:
           token: ${{ secrets.HOSTING_REPOSITORY_DISPATCH }}
           repository: reflex-dev/reflex-hosting
           event-type: push
-          client-payload: '{"repo": "${{ github.repository }}", "sha": "${{ github.sha }}"}'
+          client-payload: '{"repo": "${{ github.repository }}", "sha": "${{ github.sha }}", "deployment-key": "chat"}'
