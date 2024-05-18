@@ -3,19 +3,26 @@ import reflex as rx
 from chat.components import loading_icon
 from chat.state import QA, State
 
+message_style = dict(
+    display="inline-block",
+    padding="1em",
+    border_radius="8px",
+    max_width=["30em", "30em", "50em", "50em", "50em", "50em"],
+)
 
-message_style = dict(display="inline-block", padding="1em", border_radius="8px", max_width=["30em", "30em", "50em", "50em", "50em", "50em"])
+
+def increment_likes(chat_name: str, index: int):
+    """Increment the likes count for a given message."""
+    State.chats[chat_name][index].likes += 1
 
 
-def message(qa: QA) -> rx.Component:
-    """A single question/answer message.
+def increment_dislikes(chat_name: str, index: int):
+    """Increment the dislikes count for a given message."""
+    State.chats[chat_name][index].dislikes += 1
 
-    Args:
-        qa: The question/answer pair.
 
-    Returns:
-        A component displaying the question/answer pair.
-    """
+def message(qa: QA, index: int) -> rx.Component:
+    """A single question/answer message with like/dislike buttons."""
     return rx.box(
         rx.box(
             rx.markdown(
@@ -36,6 +43,20 @@ def message(qa: QA) -> rx.Component:
             ),
             text_align="left",
             padding_top="1em",
+        ),
+        rx.hstack(
+            rx.button(
+                rx.icon("thumbs-up", size=18),
+                rx.text(str(qa.likes)),
+                # on_click=lambda: increment_likes(State.current_chat, index),
+            ),
+            rx.button(
+                rx.icon("thumbs-down", size=18),
+                rx.text(str(qa.dislikes)),
+                # on_click=lambda: increment_dislikes(State.current_chat, index),
+            ),
+            align_items="center",
+            justify_content="space-between",
         ),
         width="100%",
     )
