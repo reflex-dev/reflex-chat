@@ -1,6 +1,9 @@
 import os
 import reflex as rx
 from openai import OpenAI
+from dotenv import load_dotenv
+
+load_dotenv()  # This loads the environment variables from the .env file
 
 
 # Checking if the API key is set properly
