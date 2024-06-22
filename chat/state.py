@@ -2,9 +2,15 @@ import os
 import reflex as rx
 from openai import OpenAI
 from dotenv import load_dotenv
+from reflex.state import BaseState
+import PIL
+import requests
+import torch
+from io import BytesIO
+from diffusers import LEditsPPPipelineStableDiffusion
+from diffusers.utils import load_image
 
 load_dotenv()  # This loads the environment variables from the .env file
-
 
 # Checking if the API key is set properly
 if not os.getenv("OPENAI_API_KEY"):
@@ -21,6 +27,56 @@ class QA(rx.Base):
 DEFAULT_CHATS = {
     "Intros": [],
 }
+
+
+class ImageGenerator:
+    def __init__(self):
+        self.model_name = "runwayml/stable-diffusion-v1-5"  # Replace with your specific model
+        self.pipe = LEditsPPPipelineStableDiffusion.from_pretrained(self.model_name, torch_dtype=torch.float16)
+        self.pipe = self.pipe.to("cuda")
+        self.image = None  # Placeholder for your initial image
+
+    def load_image_from_url(self, url: str):
+        """
+        Load an image from a URL and convert it to RGB format.
+        """
+        response = requests.get(url)
+        return PIL.Image.open(BytesIO(response.content)).convert("RGB")
+
+    async def generate_new_image(self, prompt: str):
+        """
+        Input: prompt (str) - Text prompt for generating the new image.
+        Result: Generates a new image based on the prompt and sets it to the global image.
+        Output: The new image
+        """
+        if self.image is None:
+            raise ValueError("No initial image is set.")
+
+        # Invert the initial image
+        _ = self.pipe.invert(image=self.image, num_inversion_steps=50, skip=0.1)
+
+        # Generate the new image based on the editing prompt
+        edited_image = self.pipe(
+            editing_prompt=[prompt],
+            edit_guidance_scale=10.0,
+            edit_threshold=0.75
+        ).images[0]
+
+        # Update the global image
+        self.image = edited_image
+
+        return self.image
+
+    def set_initial_image(self, image_path: str = None, image_url: str = None):
+        """
+        Sets the initial image from a file path or a URL.
+        """
+        if image_path:
+            self.image = PIL.Image.open(image_path).convert("RGB")
+        elif image_url:
+            self.image = self.load_image_from_url(image_url)
+        else:
+            raise ValueError("Either image_path or image_url must be provided.")
 
 
 class State(rx.State):
@@ -40,6 +96,17 @@ class State(rx.State):
 
     # The name of the new chat.
     new_chat_name: str = ""
+
+    def __init__(
+            self,
+            *args,
+            parent_state: BaseState | None = None,
+            init_substates: bool = True,
+            _reflex_internal_init: bool = False,
+            **kwargs,
+    ):
+        super().__init__(args, parent_state, init_substates, _reflex_internal_init, kwargs)
+        self.image_generator = ImageGenerator()
 
     def create_chat(self):
         """Create a new chat."""
@@ -88,7 +155,7 @@ class State(rx.State):
         """Get the response from the API.
 
         Args:
-            form_data: A dict with the current question.
+            question: A dict with the current question.
         """
 
         # Add the question to the list of questions.
@@ -137,3 +204,35 @@ class State(rx.State):
 
         # Toggle the processing flag.
         self.processing = False
+
+    async def set_image_context(self, form_data: dict[str, str]):
+        """
+        Input: Image
+        Result: The global image is set to the image provided.
+                Other functions using the global image will now use this image.
+        Output: None
+        """
+        image_url = form_data.get("image_url")
+        image_path = form_data.get("image_path")
+
+        if image_url:
+            self.image_generator.set_initial_image(image_url=image_url)
+        elif image_path:
+            self.image_generator.set_initial_image(image_path=image_path)
+        else:
+            raise ValueError("Either image_url or image_path must be provided.")
+
+        yield
+
+    async def generate_new_image(self, prompt: str):
+        """
+        Input: prompt (str) - Text prompt for generating the new image.
+        Result: Based on the prompt, make alterations to the image and set the global image to the new image.
+        Output: The new image
+        """
+        if not prompt:
+            raise ValueError("Prompt cannot be empty.")
+
+        new_image = await self.image_generator.generate_new_image(prompt)
+        yield new_image
+
