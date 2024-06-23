@@ -9,6 +9,11 @@ import torch
 from io import BytesIO
 from diffusers import LEditsPPPipelineStableDiffusion
 from diffusers.utils import load_image
+from leditspp.scheduling_dpmsolver_multistep_inject import DPMSolverMultistepSchedulerInject
+from leditspp import StableDiffusionPipeline_LEDITS
+from typing import Union
+import numpy as np
+
 
 load_dotenv()  # This loads the environment variables from the .env file
 
@@ -29,19 +34,60 @@ DEFAULT_CHATS = {
 }
 
 
+def load_image_fromurl(image: Union[str, PIL.Image.Image]):
+    """
+    Loads `image` to a PIL Image.
+
+    Args:
+        image (`str` or `PIL.Image.Image`):
+            The image to convert to the PIL Image format.
+    Returns:
+        `PIL.Image.Image`:
+            A PIL Image.
+    """
+    if isinstance(image, str):
+        if image.startswith("http://") or image.startswith("https://"):
+            image = PIL.Image.open(requests.get(image, stream=True).raw)
+        elif os.path.isfile(image):
+            image = PIL.Image.open(image)
+        else:
+            raise ValueError(
+                f"Incorrect path or url, URLs must start with `http://` or `https://`, and {image} is not a valid path"
+            )
+    elif isinstance(image, PIL.Image.Image):
+        image = image
+    else:
+        raise ValueError(
+            "Incorrect format used for image. Should be an url linking to an image, a local path, or a PIL image."
+        )
+    image = PIL.ImageOps.exif_transpose(image)
+    image = image.convert("RGB")
+    return image
+
+
+def image_grid(imgs, rows, cols, spacing = 20):
+    assert len(imgs) == rows * cols
+
+    w, h = imgs[0].size
+
+    grid = PIL.Image.new('RGBA', size=(cols * w + (cols-1)*spacing, rows * h + (rows-1)*spacing ), color=(255,255,255,0))
+    grid_w, grid_h = grid.size
+
+    for i, img in enumerate(imgs):
+        grid.paste(img, box=( i // rows * (w+spacing), i % rows * (h+spacing)))
+        #print(( i // rows * w, i % rows * h))
+    return grid
+
+
 class ImageGenerator:
     def __init__(self):
-        self.model_name = "runwayml/stable-diffusion-v1-5"  # Replace with your specific model
-        self.pipe = LEditsPPPipelineStableDiffusion.from_pretrained(self.model_name, torch_dtype=torch.float16)
-        self.pipe = self.pipe.to("cuda")
+        #self.model_name = "stabilityai/stable-diffusion-3-medium-diffusers"  # Model name
+        self.model_name = "runwayml/stable-diffusion-v1-5"  # Model name
+        self.pipe = StableDiffusionPipeline_LEDITS.from_pretrained(self.model_name,safety_checker = None,)
+        self.pipe.scheduler = DPMSolverMultistepSchedulerInject.from_pretrained(self.model_name, subfolder="scheduler"
+                                                             , algorithm_type="sde-dpmsolver++", solver_order=2)
+        self.pipe = self.pipe.to("mps")  # TODO: CHANGE THIS DEPENDING ON HARDWARE (mps, cuda, intel)
         self.image = None  # Placeholder for your initial image
-
-    def load_image_from_url(self, url: str):
-        """
-        Load an image from a URL and convert it to RGB format.
-        """
-        response = requests.get(url)
-        return PIL.Image.open(BytesIO(response.content)).convert("RGB")
 
     async def generate_new_image(self, prompt: str):
         """
@@ -52,18 +98,19 @@ class ImageGenerator:
         if self.image is None:
             raise ValueError("No initial image is set.")
 
-        # Invert the initial image
-        _ = self.pipe.invert(image=self.image, num_inversion_steps=50, skip=0.1)
+        im = np.array(self.image)[:, :, :3]
 
-        # Generate the new image based on the editing prompt
-        edited_image = self.pipe(
-            editing_prompt=[prompt],
-            edit_guidance_scale=10.0,
-            edit_threshold=0.75
-        ).images[0]
+        gen = torch.manual_seed(42)
+        with torch.no_grad():
+            _ = self.pipe.invert(im, num_inversion_steps=50, generator=gen, verbose=True, skip=0.15)
+            edited_image = self.pipe(editing_prompt=[prompt],
+                                        edit_threshold=[.7, .9],
+                                        edit_guidance_scale=[3, 4],
+                                        reverse_editing_direction=[False, False],
+                                        use_intersect_mask=True, )
 
-        # Update the global image
-        self.image = edited_image
+            # Update the global image
+            self.image = edited_image.images[0]
 
         return self.image
 
@@ -74,7 +121,7 @@ class ImageGenerator:
         if image_path:
             self.image = PIL.Image.open(image_path).convert("RGB")
         elif image_url:
-            self.image = self.load_image_from_url(image_url)
+            self.image = load_image_fromurl(image_url).resize((512, 512))
         else:
             raise ValueError("Either image_path or image_url must be provided.")
 
