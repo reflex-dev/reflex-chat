@@ -63,18 +63,16 @@ def action_bar() -> rx.Component:
             rx.chakra.form(
                 rx.chakra.form_control(
                     rx.hstack(
-                        rx.radix.text_field.root(
-                            rx.radix.text_field.input(
-                                placeholder="Type something...",
-                                id="question",
-                                width=["15em", "20em", "45em", "50em", "50em", "50em"],
-                            ),
-                            rx.radix.text_field.slot(
+                        rx.input(
+                            rx.input.slot(
                                 rx.tooltip(
                                     rx.icon("info", size=18),
                                     content="Enter a question to get a response.",
                                 )
                             ),
+                            placeholder="Type something...",
+                            id="question",
+                            width=["15em", "20em", "45em", "50em", "50em", "50em"],
                         ),
                         rx.button(
                             rx.cond(
