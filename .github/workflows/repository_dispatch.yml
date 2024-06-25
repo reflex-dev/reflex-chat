@@ -1,10 +1,10 @@
-name: reflex-chat-repository-dispatch
+name: chat-repository-dispatch
 on:
   push:
     branches: ['main']
 jobs:
   test:
-    name: reflex-chat-repository-dispatch
+    name: chat-repository-dispatch
     runs-on: ubuntu-latest
     steps:
       - name: Dispatch

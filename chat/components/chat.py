@@ -1,8 +1,9 @@
 import reflex as rx
 
-from chat.components import loading_icon
+# from chat.components import loading_icon
 from chat.state import QA, State
 
+from ..components import loading_icon
 
 message_style = dict(display="inline-block", padding="1em", border_radius="8px", max_width=["30em", "30em", "50em", "50em", "50em", "50em"])
 
