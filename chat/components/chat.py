@@ -1,11 +1,37 @@
 import reflex as rx
 
-# from chat.components import loading_icon
-from chat.state import QA, State
-
+from ..states.state import QA, State
 from ..components import loading_icon
 
-message_style = dict(display="inline-block", padding="1em", border_radius="8px", max_width=["30em", "30em", "50em", "50em", "50em", "50em"])
+
+def create_message_item(text: rx.Component, shade: int, alignment: str):
+    return rx.box(
+        text,
+        background_color=rx.color("mauve", shade),
+        text_align=alignment,
+        width="100%",
+        padding="1em",
+        border_radius="6px",
+    )
+
+
+def create_answer_options(path):
+    return rx.button(
+        rx.image(
+            src=path,
+            width="20px",
+            height="20px",
+            filter=rx.color_mode_cond(
+                "invert(0)",
+                "invert(1)",
+            ),
+        ),
+        color_scheme="gray",
+        variant="ghost",
+        width="100%",
+        justify_content="center",
+        align_items="center",
+    )
 
 
 def message(qa: QA) -> rx.Component:
@@ -17,43 +43,48 @@ def message(qa: QA) -> rx.Component:
     Returns:
         A component displaying the question/answer pair.
     """
-    return rx.box(
-        rx.box(
-            rx.markdown(
-                qa.question,
-                background_color=rx.color("mauve", 4),
-                color=rx.color("mauve", 12),
-                **message_style,
+    return rx.vstack(
+        create_message_item(rx.text(qa.question), 2, "right"),
+        rx.hstack(
+            create_message_item(rx.text(qa.answer), 3, "left"),
+            rx.vstack(
+                create_answer_options("like.svg"),
+                create_answer_options("dislike.svg"),
+                create_answer_options("clipboard.svg"),
+                border_radius="6px",
+                justify_content="center",
+                align_items="center",
+                spacing="4",
             ),
-            text_align="right",
-            margin_top="1em",
-        ),
-        rx.box(
-            rx.markdown(
-                qa.answer,
-                background_color=rx.color("accent", 4),
-                color=rx.color("accent", 12),
-                **message_style,
-            ),
-            text_align="left",
-            padding_top="1em",
+            width="100%",
         ),
         width="100%",
+        padding="1em",
+        spacing="3",
     )
 
 
 def chat() -> rx.Component:
     """List all the messages in a single conversation."""
     return rx.vstack(
-        rx.box(rx.foreach(State.chats[State.current_chat], message), width="100%"),
-        py="8",
+        rx.vstack(
+            rx.cond(
+                State.is_hydrated & State.current_chat,
+                rx.foreach(
+                    State.chats[State.current_chat],
+                    message,
+                ),
+                rx.spacer(),
+            ),
+            width="100%",
+            spacing="3",
+        ),
         flex="1",
         width="100%",
         max_width="50em",
-        padding_x="4px",
         align_self="center",
         overflow="hidden",
-        padding_bottom="5em",
+        spacing="0",
     )
 
 
@@ -89,7 +120,7 @@ def action_bar() -> rx.Component:
                     ),
                     is_disabled=State.processing,
                 ),
-                on_submit=State.process_question,
+                # on_submit=State.process_question,
                 reset_on_submit=True,
             ),
             rx.text(

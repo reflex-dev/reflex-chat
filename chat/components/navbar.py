@@ -1,129 +1,120 @@
 import reflex as rx
-from chat.state import State
 
-def sidebar_chat(chat: str) -> rx.Component:
-    """A sidebar chat item.
+from ..states.drawer import Drawer
+from ..states.state import State
+from ..styles.style import navbar, inner
 
-    Args:
-        chat: The chat item.
-    """
-    return  rx.drawer.close(rx.hstack(
-        rx.button(
-            chat, on_click=lambda: State.set_chat(chat), width="80%", variant="surface"
-        ),
-        rx.button(
-            rx.icon(
-                tag="trash",
-                on_click=State.delete_chat,
-                stroke_width=1,
+
+def create_event_button(path: str, function: callable, message: str):
+    def create_image(_path: str):
+        return rx.image(
+            src=path,
+            width="21px",
+            height="21px",
+            filter=rx.color_mode_cond(
+                "invert(0)",
+                "invert(1)",
             ),
-            width="20%",
-            variant="surface",
-            color_scheme="red",
-        ),
-        width="100%",
-    ))
+        )
 
-
-def sidebar(trigger) -> rx.Component:
-    """The sidebar component."""
-    return rx.drawer.root(
-        rx.drawer.trigger(trigger),
-        rx.drawer.overlay(),
-        rx.drawer.portal(
-            rx.drawer.content(
-                rx.vstack(
-                    rx.heading("Chats", color=rx.color("mauve", 11)),
-                    rx.divider(),
-                    rx.foreach(State.chat_titles, lambda chat: sidebar_chat(chat)),
-                    align_items="stretch",
-                    width="100%",
-                ),
-                top="auto",
-                right="auto",
-                height="100%",
-                width="20em",
-                padding="2em",
-                background_color=rx.color("mauve", 2),
-                outline="none",
-            )
+    return rx.tooltip(
+        rx.button(
+            create_image(path),
+            cursor="pointer",
+            variant="ghost",
+            color_scheme="gray",
+            padding="0.25em",
+            on_click=function,
         ),
-        direction="left",
+        content=message,
     )
 
 
-def modal(trigger) -> rx.Component:
-    """A modal to create a new chat."""
-    return rx.dialog.root(
-        rx.dialog.trigger(trigger),
-        rx.dialog.content(
-            rx.hstack(
-                rx.input(
-                    placeholder="Type something...",
-                    on_blur=State.set_new_chat_name,
-                    width=["15em", "20em", "30em", "30em", "30em", "30em"],
-                ),
-                rx.dialog.close(
-                    rx.button(
-                        "Create chat",
-                        on_click=State.create_chat,
-                    ),
-                ),
-                background_color=rx.color("mauve", 1),
-                spacing="2",
-                width="100%",
-            ),
+def big_screen_navbar():
+    return rx.hstack(
+        create_event_button(
+            "sidebar.svg",
+            Drawer.toggle_sidebar,
+            "Toggle Sidebar",
         ),
+        create_event_button(
+            "new_chat.svg",
+            Drawer.toggle_new_chat,
+            "New Chat",
+        ),
+        rx.color_mode.button(size="1", variant="ghost"),
+        display=["none", "none", "none", "none", "flex"],
+        align_items="center",
+        justify_content="center",
+        spacing="5",
     )
 
 
-def navbar():
-    return rx.box(
+def small_screen_item(title: str, path: str):
+    return rx.chakra.menu_item(
         rx.hstack(
-            rx.hstack(
-                rx.avatar(fallback="RC", variant="solid"),
-                rx.heading("Reflex Chat"),
-                rx.desktop_only(
-                    rx.badge(
-                    State.current_chat,
-                    rx.tooltip(rx.icon("info", size=14), content="The current selected chat."),
-                    variant="soft"
-                    )
+            rx.text(title),
+            rx.image(
+                src=path,
+                width="20px",
+                height="20px",
+                filter=rx.color_mode_cond(
+                    "invert(0)",
+                    "invert(1)",
                 ),
-                align_items="center",
-            ),
-            rx.hstack(
-                modal(rx.button("+ New chat")),
-                sidebar(
-                    rx.button(
-                        rx.icon(
-                            tag="messages-square",
-                            color=rx.color("mauve", 12),
-                        ),
-                        background_color=rx.color("mauve", 6),
-                    )
-                ),
-                rx.desktop_only(
-                    rx.button(
-                        rx.icon(
-                            tag="sliders-horizontal",
-                            color=rx.color("mauve", 12),
-                        ),
-                        background_color=rx.color("mauve", 6),
-                    )
-                ),
-                align_items="center",
             ),
             justify_content="space-between",
             align_items="center",
+            width="100%",
         ),
-        backdrop_filter="auto",
-        backdrop_blur="lg",
-        padding="12px",
-        border_bottom=f"1px solid {rx.color('mauve', 3)}",
-        background_color=rx.color("mauve", 2),
-        position="sticky",
-        top="0",
-        z_index="100",
-        align_items="center",
+        width="100%",
+        color="inherit",
+    )
+
+
+def small_screen_navbar():
+    return rx.box(
+        rx.chakra.menu(
+            rx.chakra.menu_button(rx.icon(tag="menu")),
+            rx.chakra.menu_list(
+                small_screen_item("Toggle Sidebar", "sidebar.svg"),
+                small_screen_item("New Chat", "new_chat.svg"),
+                font_size="var(--chakra-fontSizes-sm)",
+            ),
+            bg="inherit",
+        ),
+        display=["flex", "flex", "flex", "flex", "none"],
+    )
+
+
+def render_chat_navbar():
+    return rx.hstack(
+        # left side header ...
+        rx.hstack(
+            rx.box(
+                rx.heading("Reflex A.I. Chat", size="3"),
+                padding="0.6em 1.5em 0.6em 0.6em",
+            ),
+            **inner,
+        ),
+        # middle header ...
+        rx.cond(
+            State.current_chat,
+            rx.badge(
+                rx.text(State.current_chat, width="100%", text_align="center"),
+                variant="surface",
+                color="inherit",
+                display=["none", "none", "none", "flex", "flex"],
+            ),
+            rx.spacer(),
+        ),
+        # right side header ...
+        rx.hstack(
+            big_screen_navbar(),
+            small_screen_navbar(),
+            **inner,
+            spacing="4",
+        ),
+        **navbar,
+        background_color=rx.color("mauve", 1),
     )

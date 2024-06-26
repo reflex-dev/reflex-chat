@@ -2,5 +2,5 @@ import reflex as rx
 
 
 config = rx.Config(
-    app_name="chat",
+    app_name="chat"
 )
