@@ -42,7 +42,7 @@ def big_screen_navbar():
             Drawer.toggle_new_chat,
             "New Chat",
         ),
-        rx.color_mode.button(size="1", variant="ghost"),
+        # rx.color_mode.button(size="1", variant="ghost"),
         display=["none", "none", "none", "none", "flex"],
         align_items="center",
         justify_content="center",
@@ -92,21 +92,10 @@ def render_chat_navbar():
         # left side header ...
         rx.hstack(
             rx.box(
-                rx.heading("Reflex A.I. Chat", size="3"),
+                rx.heading(State.title, size="3", width="250px", text_overflow="ellipsis", overflow="hidden", white_space="nowrap",),
                 padding="0.6em 1.5em 0.6em 0.6em",
             ),
             **inner,
-        ),
-        # middle header ...
-        rx.cond(
-            State.current_chat,
-            rx.badge(
-                rx.text(State.current_chat, width="100%", text_align="center"),
-                variant="surface",
-                color="inherit",
-                display=["none", "none", "none", "flex", "flex"],
-            ),
-            rx.spacer(),
         ),
         # right side header ...
         rx.hstack(
@@ -116,5 +105,5 @@ def render_chat_navbar():
             spacing="4",
         ),
         **navbar,
-        background_color=rx.color("mauve", 1),
+        background_color=rx.color("mauve", 1)
     )

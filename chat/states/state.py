@@ -38,7 +38,7 @@ q4 = QA(
 
 q5 = QA(
     question="How do you iterate over a dictionary in Python?",
-    answer="In Python, you can iterate over a dictionary using a for loop. By default, iterating over a dictionary iterates over its keys. You can access both keys and values using the items() method. For example: \n\n```python\nmy_dict = {'a': 1, 'b': 2, 'c': 3}\nfor key in my_dict:\n    print(key, my_dict[key])  # This prints each key-value pair\n\n# Using items() method\nfor key, value in my_dict.items():\n    print(key, value)  # This prints each key-value pair more efficiently\n```\nThis allows you to process each key-value pair in a dictionary sequentially, enabling operations such as data manipulation, filtering, or transformation based on dictionary contents.",
+    answer="In Python, you can iterate over a dictionary using a for loop. By default, iterating over a dictionary iterates over its keys. You can access both keys and values using the items() method. For example: \n\n```python\nmy_dict = {'a': 1, 'b': 2, 'c': 3}\nfor key in my_dict:\n    print(key, my_dict[key])  # This prints each key-value pair\n\n# Using items() method\nfor key, value in my_dict.items():\n    print(key, value)```",
 )
 
 q6 = QA(
@@ -56,9 +56,36 @@ q8 = QA(
     answer="Handling forms in React involves managing form input elements and their state. You can use controlled components where form elements like `<input>`, `<textarea>`, and `<select>` maintain their own state and update it based on user input using onChange event handlers. Alternatively, you can use the `useState` hook to manage form state and `useRef` hook to access form elements directly. Form submission can be handled using onSubmit event handler on the `<form>` element to capture and process user input.",
 )
 
+q9 = QA(
+    question="What are 5 creative things I could do with my kids' art? I don't want to throw them away, but it's also so much clutter.",
+    answer="""
+Here are five creative ways to preserve and showcase your kids' art while minimizing clutter:
+
+### 1. **Create a Rotating Gallery**
+Designate a wall or a bulletin board in your home as a rotating gallery. Use frames, clips, or a wire with clothespins to display their artwork. Regularly rotate the pieces to keep the display fresh and exciting. This way, your kids can see their work being appreciated, and you can easily change out the pieces to reduce clutter.
+
+### 2. **Make a Custom Art Book**
+Collect the artwork and create a photo book or a scrapbook. You can scan or photograph each piece and use online services to design and print a professional-looking book. This way, you preserve the memories in a compact, easily storable format that can be revisited and enjoyed over the years.
+
+### 3. **Create Art Collages**
+Select a few favorite pieces and cut them into smaller shapes to create a new, collaborative collage. You can frame these collages as unique art pieces that combine multiple works into one. This not only reduces the number of individual items but also creates a special, joint project.
+
+### 4. **Turn Art into Gifts or Keepsakes**
+Use the artwork to create personalized gifts or keepsakes. Ideas include:
+- **Calendars:** Make a calendar featuring different pieces for each month.
+- **Magnets:** Transfer small pieces of art onto magnets for the fridge.
+- **Puzzles:** Have a favorite piece turned into a custom puzzle.
+- **Tote Bags or T-shirts:** Print the artwork onto fabric items.
+
+### 5. **Digital Archive and Slideshow**
+Scan or photograph each piece of art and create a digital archive. You can then use these digital files to create slideshows or digital photo frames that rotate through the images. This allows you to keep and enjoy the art without physical clutter. Additionally, you can easily share these digital collections with family and friends.
+    """
+)
+
 DEFAULT_CHATS = {
     "Python Questions": [q1, q2, q3, q4, q5],
     "ReactJS Questions": [q6, q7, q8],
+    "What are 5 creative things I could do with my kids' art? I don't want to throw them away, but it's also so much clutter.": [q9]
 }
 
 
@@ -66,6 +93,7 @@ class State(rx.State):
     """The app state."""
 
     # Base vars ...
+    title: str = "Reflex AI Chat"
     chats: dict[str, list[QA]] = DEFAULT_CHATS
     current_chat: str
 

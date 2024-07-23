@@ -12,9 +12,11 @@
 .vscode
 .web
 __pycache__/
+assets/external/
 backend.zip
 bun.lockb
 dist/*
 frontend.zip
 poetry.lock
 venv/
+.venv/

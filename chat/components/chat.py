@@ -4,14 +4,13 @@ from ..states.state import QA, State
 from ..components import loading_icon
 
 
-def create_message_item(text: rx.Component, shade: int, alignment: str):
+def create_message_item(text: rx.Component, shade: int):
     return rx.box(
         text,
         background_color=rx.color("mauve", shade),
-        text_align=alignment,
         width="100%",
-        padding="1em",
-        border_radius="6px",
+        padding="12px 14px",
+        border_radius="5px",
     )
 
 
@@ -19,8 +18,8 @@ def create_answer_options(path):
     return rx.button(
         rx.image(
             src=path,
-            width="20px",
-            height="20px",
+            width="18px",
+            height="18px",
             filter=rx.color_mode_cond(
                 "invert(0)",
                 "invert(1)",
@@ -28,9 +27,10 @@ def create_answer_options(path):
         ),
         color_scheme="gray",
         variant="ghost",
-        width="100%",
+        # width="100%",
         justify_content="center",
         align_items="center",
+        cursor="pointer"
     )
 
 
@@ -42,27 +42,27 @@ def message(qa: QA) -> rx.Component:
 
     Returns:
         A component displaying the question/answer pair.
+
     """
     return rx.vstack(
-        create_message_item(rx.text(qa.question), 2, "right"),
+        create_message_item(rx.text(qa.question, weight="medium", text_align="left"), 2),
+        create_message_item(rx.markdown(qa.answer),1),
         rx.hstack(
-            create_message_item(rx.text(qa.answer), 3, "left"),
-            rx.vstack(
-                create_answer_options("like.svg"),
-                create_answer_options("dislike.svg"),
-                create_answer_options("clipboard.svg"),
-                border_radius="6px",
-                justify_content="center",
-                align_items="center",
-                spacing="4",
-            ),
+            create_answer_options("like.svg"),
+            create_answer_options("dislike.svg"),
+            create_answer_options("clipboard.svg"),
+            justify="end",
+            align="center",
             width="100%",
+            padding="10px",
         ),
         width="100%",
-        padding="1em",
-        spacing="3",
+        spacing="1",
+        font_family="Futura",
     )
 
+
+def example_prompts(): ...
 
 def chat() -> rx.Component:
     """List all the messages in a single conversation."""
@@ -77,7 +77,8 @@ def chat() -> rx.Component:
                 rx.spacer(),
             ),
             width="100%",
-            spacing="3",
+            spacing="9",
+            padding="16px",
         ),
         flex="1",
         width="100%",
@@ -120,7 +121,7 @@ def action_bar() -> rx.Component:
                     ),
                     is_disabled=State.processing,
                 ),
-                # on_submit=State.process_question,
+                on_submit=State.process_question,
                 reset_on_submit=True,
             ),
             rx.text(
@@ -135,7 +136,7 @@ def action_bar() -> rx.Component:
         position="sticky",
         bottom="0",
         left="0",
-        padding_y="16px",
+        padding_y="24px",
         backdrop_filter="auto",
         backdrop_blur="lg",
         border_top=f"1px solid {rx.color('mauve', 3)}",

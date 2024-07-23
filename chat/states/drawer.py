@@ -16,6 +16,7 @@ class Drawer(State):
 
     async def update_renaming_chat_input(self, value: str):
         self.new_title = value
+        self.title = value
 
     async def create_new_chat(self):
         if self.new_chat_name:
@@ -26,6 +27,7 @@ class Drawer(State):
 
     async def select_chat(self, data: str):
         self.current_chat = data
+        self.title = self.current_chat
 
 
 class SidebarOption(State):
