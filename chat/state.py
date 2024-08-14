@@ -1,7 +1,23 @@
+"""
+Summary of the Assistant API Documentation:
+
+The Assistant API allows developers to create, manage, and interact with AI assistants using OpenAI's powerful language models. The API provides endpoints for creating assistants, managing threads, and handling messages. Key features include:
+
+1. Creating Assistants: Developers can create assistants with specific instructions and tools. The assistants can be customized to perform various tasks and respond in a desired manner.
+
+2. Managing Threads: The API supports creating and managing threads, which are used to organize conversations. Each thread can contain multiple messages exchanged between the user and the assistant.
+
+3. Handling Messages: Developers can add messages to threads and receive responses from the assistant. The API supports streaming responses, allowing for real-time interaction with the assistant.
+
+4. Event Handling: The API provides event handlers to manage different events during the interaction, such as text creation, text delta, and tool calls. This allows developers to handle and process events as they occur.
+
+For more detailed information, please refer to the official documentation: https://platform.openai.com/docs/assistants/quickstart
+"""
+
 import os
 import reflex as rx
 from openai import OpenAI
-
+from datetime import datetime
 
 # Checking if the API key is set properly
 if not os.getenv("OPENAI_API_KEY"):
@@ -13,6 +29,7 @@ class QA(rx.Base):
 
     question: str
     answer: str
+    timestamp: datetime = datetime.now()
 
 
 DEFAULT_CHATS = {
@@ -110,27 +127,73 @@ class State(rx.State):
         # Remove the last mock answer.
         messages = messages[:-1]
 
-        # Start a new session to answer the question.
-        session = OpenAI().chat.completions.create(
-            model=os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"),
-            messages=messages,
-            stream=True,
+        # Create an assistant
+        client = OpenAI()
+        assistant = client.beta.assistants.create(
+            name="Reflex Assistant",
+            instructions="You are a friendly chatbot named Reflex. Respond in markdown.",
+            tools=[],
+            model="gpt-4o",
         )
 
-        # Stream the results, yielding after every word.
-        for item in session:
-            if hasattr(item.choices[0].delta, "content"):
-                answer_text = item.choices[0].delta.content
-                # Ensure answer_text is not None before concatenation
-                if answer_text is not None:
-                    self.chats[self.current_chat][-1].answer += answer_text
-                else:
-                    # Handle the case where answer_text is None, perhaps log it or assign a default value
-                    # For example, assigning an empty string if answer_text is None
-                    answer_text = ""
-                    self.chats[self.current_chat][-1].answer += answer_text
-                self.chats = self.chats
-                yield
+        # Create a thread
+        thread = client.beta.threads.create()
+
+        # Add a message to the thread
+        message = client.beta.threads.messages.create(
+            thread_id=thread.id,
+            role="user",
+            content=question
+        )
+
+        # Create a run and stream the response
+        from typing_extensions import override
+        from openai import AssistantEventHandler
+
+        class EventHandler(AssistantEventHandler):
+            @override
+            def on_text_created(self, text) -> None:
+                print(f"\nassistant > ", end="", flush=True)
+
+            @override
+            def on_text_delta(self, delta, snapshot):
+                print(delta.value, end="", flush=True)
+
+            def on_tool_call_created(self, tool_call):
+                print(f"\nassistant > {tool_call.type}\n", flush=True)
+
+            def on_tool_call_delta(self, delta, snapshot):
+                if delta.type == 'code_interpreter':
+                    if delta.code_interpreter.input:
+                        print(delta.code_interpreter.input, end="", flush=True)
+                    if delta.code_interpreter.outputs:
+                        print(f"\n\noutput >", flush=True)
+                        for output in delta.code_interpreter.outputs:
+                            if output.type == "logs":
+                                print(f"\n{output.logs}", flush=True)
+
+        try:
+            with client.beta.threads.runs.stream(
+                thread_id=thread.id,
+                assistant_id=assistant.id,
+                instructions="Please address the user as Jane Doe. The user has a premium account.",
+                event_handler=EventHandler(),
+            ) as stream:
+                for item in stream:
+                    if hasattr(item.choices[0].delta, "content"):
+                        answer_text = item.choices[0].delta.content
+                        # Ensure answer_text is not None before concatenation
+                        if answer_text is not None:
+                            self.chats[self.current_chat][-1].answer += answer_text
+                        else:
+                            # Handle the case where answer_text is None, perhaps log it or assign a default value
+                            # For example, assigning an empty string if answer_text is None
+                            answer_text = ""
+                            self.chats[self.current_chat][-1].answer += answer_text
+                        self.chats = self.chats
+                        yield
+        except Exception as e:
+            print(f"Error occurred: {e}")
 
         # Toggle the processing flag.
         self.processing = False
