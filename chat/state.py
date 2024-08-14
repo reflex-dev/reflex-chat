@@ -2,7 +2,6 @@ import os
 import reflex as rx
 from openai import OpenAI
 
-
 # Checking if the API key is set properly
 if not os.getenv("OPENAI_API_KEY"):
     raise Exception("Please set OPENAI_API_KEY environment variable.")
@@ -110,27 +109,70 @@ class State(rx.State):
         # Remove the last mock answer.
         messages = messages[:-1]
 
-        # Start a new session to answer the question.
-        session = OpenAI().chat.completions.create(
-            model=os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"),
-            messages=messages,
-            stream=True,
+        # Create an assistant
+        client = OpenAI()
+        assistant = client.beta.assistants.create(
+            name="Reflex Assistant",
+            instructions="You are a friendly chatbot named Reflex. Respond in markdown.",
+            tools=[],
+            model="gpt-4o",
         )
 
-        # Stream the results, yielding after every word.
-        for item in session:
-            if hasattr(item.choices[0].delta, "content"):
-                answer_text = item.choices[0].delta.content
-                # Ensure answer_text is not None before concatenation
-                if answer_text is not None:
-                    self.chats[self.current_chat][-1].answer += answer_text
-                else:
-                    # Handle the case where answer_text is None, perhaps log it or assign a default value
-                    # For example, assigning an empty string if answer_text is None
-                    answer_text = ""
-                    self.chats[self.current_chat][-1].answer += answer_text
-                self.chats = self.chats
-                yield
+        # Create a thread
+        thread = client.beta.threads.create()
+
+        # Add a message to the thread
+        message = client.beta.threads.messages.create(
+            thread_id=thread.id,
+            role="user",
+            content=question
+        )
+
+        # Create a run and stream the response
+        from typing_extensions import override
+        from openai import AssistantEventHandler
+
+        class EventHandler(AssistantEventHandler):
+            @override
+            def on_text_created(self, text) -> None:
+                print(f"\nassistant > ", end="", flush=True)
+
+            @override
+            def on_text_delta(self, delta, snapshot):
+                print(delta.value, end="", flush=True)
+
+            def on_tool_call_created(self, tool_call):
+                print(f"\nassistant > {tool_call.type}\n", flush=True)
+
+            def on_tool_call_delta(self, delta, snapshot):
+                if delta.type == 'code_interpreter':
+                    if delta.code_interpreter.input:
+                        print(delta.code_interpreter.input, end="", flush=True)
+                    if delta.code_interpreter.outputs:
+                        print(f"\n\noutput >", flush=True)
+                        for output in delta.code_interpreter.outputs:
+                            if output.type == "logs":
+                                print(f"\n{output.logs}", flush=True)
+
+        with client.beta.threads.runs.stream(
+            thread_id=thread.id,
+            assistant_id=assistant.id,
+            instructions="Please address the user as Jane Doe. The user has a premium account.",
+            event_handler=EventHandler(),
+        ) as stream:
+            for item in stream:
+                if hasattr(item.choices[0].delta, "content"):
+                    answer_text = item.choices[0].delta.content
+                    # Ensure answer_text is not None before concatenation
+                    if answer_text is not None:
+                        self.chats[self.current_chat][-1].answer += answer_text
+                    else:
+                        # Handle the case where answer_text is None, perhaps log it or assign a default value
+                        # For example, assigning an empty string if answer_text is None
+                        answer_text = ""
+                        self.chats[self.current_chat][-1].answer += answer_text
+                    self.chats = self.chats
+                    yield
 
         # Toggle the processing flag.
         self.processing = False

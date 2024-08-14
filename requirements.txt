@@ -1,2 +1,3 @@
 reflex>=0.4.7
 openai>=1.14.0
+openai-assistants>=0.1.0
