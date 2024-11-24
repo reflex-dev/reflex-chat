@@ -1,12 +1,14 @@
 """The main Chat app."""
 
 import reflex as rx
+import reflex_chakra as rc
+
 from chat.components import chat, navbar
 
 
 def index() -> rx.Component:
     """The main app."""
-    return rx.chakra.vstack(
+    return rc.vstack(
         navbar(),
         chat.chat(),
         chat.action_bar(),
