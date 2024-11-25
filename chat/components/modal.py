@@ -1,16 +1,18 @@
 import reflex as rx
+import reflex_chakra as rc
+
 from chat.state import State
 
 
 def modal() -> rx.Component:
     """A modal to create a new chat."""
-    return rx.chakra.modal(
-        rx.chakra.modal_overlay(
-            rx.chakra.modal_content(
-                rx.chakra.modal_header(
-                    rx.chakra.hstack(
-                        rx.chakra.text("Create new chat"),
-                        rx.chakra.icon(
+    return rc.modal(
+        rc.modal_overlay(
+            rc.modal_content(
+                rc.modal_header(
+                    rc.hstack(
+                        rc.text("Create new chat"),
+                        rc.icon(
                             tag="close",
                             font_size="sm",
                             on_click=State.toggle_modal,
@@ -22,8 +24,8 @@ def modal() -> rx.Component:
                         justify_content="space-between",
                     )
                 ),
-                rx.chakra.modal_body(
-                    rx.chakra.input(
+                rc.modal_body(
+                    rc.input(
                         placeholder="Type something...",
                         on_blur=State.set_new_chat_name,
                         bg="#222",
@@ -31,8 +33,8 @@ def modal() -> rx.Component:
                         _placeholder={"color": "#fffa"},
                     ),
                 ),
-                rx.chakra.modal_footer(
-                    rx.chakra.button(
+                rc.modal_footer(
+                    rc.button(
                         "Create",
                         bg="#5535d4",
                         box_shadow="md",

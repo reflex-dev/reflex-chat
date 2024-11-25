@@ -1,4 +1,5 @@
 import reflex as rx
+import reflex_chakra as rc
 
 from chat.components import loading_icon
 from chat.state import QA, State
@@ -60,8 +61,8 @@ def action_bar() -> rx.Component:
     """The action bar to send a new message."""
     return rx.center(
         rx.vstack(
-            rx.chakra.form(
-                rx.chakra.form_control(
+            rc.form(
+                rc.form_control(
                     rx.hstack(
                         rx.input(
                             rx.input.slot(
