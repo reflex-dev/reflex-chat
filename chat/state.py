@@ -59,7 +59,7 @@ class State(rx.State):
         """
         self.current_chat = chat_name
 
-    @rx.var
+    @rx.var(cache=True)
     def chat_titles(self) -> list[str]:
         """Get the list of chat titles.
 
