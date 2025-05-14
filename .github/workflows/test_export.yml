@@ -1,0 +1,30 @@
+name: check-export
+env:
+  OPENAI_API_KEY: "dummy"
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check-export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install UV
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: 3.10
+          enable-cache: true
+          activate-environment: true
+
+      - name: Install Reflex
+        run: uv pip install -r requirements.txt
+
+      - name: Initialize Reflex
+        run: reflex init
+
+      - name: Build frontend
+        run: reflex export
