@@ -1,28 +1,34 @@
 import reflex as rx
 from chat.state import State
 
+
 def sidebar_chat(chat: str) -> rx.Component:
     """A sidebar chat item.
 
     Args:
         chat: The chat item.
     """
-    return  rx.drawer.close(rx.hstack(
-        rx.button(
-            chat, on_click=lambda: State.set_chat(chat), width="80%", variant="surface"
-        ),
-        rx.button(
-            rx.icon(
-                tag="trash",
-                on_click=State.delete_chat,
-                stroke_width=1,
+    return rx.drawer.close(
+        rx.hstack(
+            rx.button(
+                chat,
+                on_click=lambda: State.set_chat(chat),
+                width="80%",
+                variant="surface",
             ),
-            width="20%",
-            variant="surface",
-            color_scheme="red",
-        ),
-        width="100%",
-    ))
+            rx.button(
+                rx.icon(
+                    tag="trash",
+                    on_click=State.delete_chat,
+                    stroke_width=1,
+                ),
+                width="20%",
+                variant="surface",
+                color_scheme="red",
+            ),
+            width="100%",
+        )
+    )
 
 
 def sidebar(trigger) -> rx.Component:
@@ -59,9 +65,10 @@ def modal(trigger) -> rx.Component:
         rx.dialog.content(
             rx.hstack(
                 rx.input(
-                    placeholder="Type something...",
+                    placeholder="Chat name",
                     on_blur=State.set_new_chat_name,
-                    width=["15em", "20em", "30em", "30em", "30em", "30em"],
+                    flex="1",
+                    min_width="20ch",
                 ),
                 rx.dialog.close(
                     rx.button(
@@ -69,61 +76,39 @@ def modal(trigger) -> rx.Component:
                         on_click=State.create_chat,
                     ),
                 ),
-                background_color=rx.color("mauve", 1),
                 spacing="2",
+                wrap="wrap",
                 width="100%",
             ),
+            background_color=rx.color("mauve", 1),
         ),
     )
 
 
 def navbar():
-    return rx.box(
-        rx.hstack(
-            rx.hstack(
-                rx.avatar(fallback="RC", variant="solid"),
-                rx.heading("Reflex Chat"),
-                rx.desktop_only(
-                    rx.badge(
-                    State.current_chat,
-                    rx.tooltip(rx.icon("info", size=14), content="The current selected chat."),
-                    variant="soft"
-                    )
-                ),
-                align_items="center",
+    return rx.hstack(
+        rx.badge(
+            State.current_chat,
+            rx.tooltip(
+                rx.icon("info", size=14),
+                content="The current selected chat.",
             ),
-            rx.hstack(
-                modal(rx.button("+ New chat")),
-                sidebar(
-                    rx.button(
-                        rx.icon(
-                            tag="messages-square",
-                            color=rx.color("mauve", 12),
-                        ),
-                        background_color=rx.color("mauve", 6),
-                    )
-                ),
-                rx.desktop_only(
-                    rx.button(
-                        rx.icon(
-                            tag="sliders-horizontal",
-                            color=rx.color("mauve", 12),
-                        ),
-                        background_color=rx.color("mauve", 6),
-                    )
-                ),
-                align_items="center",
-            ),
-            justify_content="space-between",
-            align_items="center",
+            size="3",
+            variant="soft",
+            margin_inline_end="auto",
         ),
-        backdrop_filter="auto",
-        backdrop_blur="lg",
+        modal(
+            rx.icon_button("message-square-plus"),
+        ),
+        sidebar(
+            rx.icon_button(
+                "messages-square",
+                background_color=rx.color("mauve", 6),
+            )
+        ),
+        justify_content="space-between",
+        align_items="center",
         padding="12px",
         border_bottom=f"1px solid {rx.color('mauve', 3)}",
         background_color=rx.color("mauve", 2),
-        position="sticky",
-        top="0",
-        z_index="100",
-        align_items="center",
     )
