@@ -1,11 +1,27 @@
 import reflex as rx
-import reflex_chakra as rc
 
-from chat.components import loading_icon
 from chat.state import QA, State
+from reflex.constants.colors import ColorType
 
 
-message_style = dict(display="inline-block", padding="1em", border_radius="8px", max_width=["30em", "30em", "50em", "50em", "50em", "50em"])
+def message_content(text: str, color: ColorType) -> rx.Component:
+    """Create a message content component.
+
+    Args:
+        text: The text to display.
+        color: The color of the message.
+
+    Returns:
+        A component displaying the message.
+    """
+    return rx.markdown(
+        text,
+        background_color=rx.color(color, 4),
+        color=rx.color(color, 12),
+        display="inline-block",
+        padding_inline="1em",
+        border_radius="8px",
+    )
 
 
 def message(qa: QA) -> rx.Component:
@@ -19,41 +35,29 @@ def message(qa: QA) -> rx.Component:
     """
     return rx.box(
         rx.box(
-            rx.markdown(
-                qa.question,
-                background_color=rx.color("mauve", 4),
-                color=rx.color("mauve", 12),
-                **message_style,
-            ),
+            message_content(qa["question"], "mauve"),
             text_align="right",
-            margin_top="1em",
+            margin_bottom="8px",
         ),
         rx.box(
-            rx.markdown(
-                qa.answer,
-                background_color=rx.color("accent", 4),
-                color=rx.color("accent", 12),
-                **message_style,
-            ),
+            message_content(qa["answer"], "accent"),
             text_align="left",
-            padding_top="1em",
+            margin_bottom="8px",
         ),
-        width="100%",
+        max_width="50em",
+        margin_inline="auto",
     )
 
 
 def chat() -> rx.Component:
     """List all the messages in a single conversation."""
-    return rx.vstack(
-        rx.box(rx.foreach(State.chats[State.current_chat], message), width="100%"),
-        py="8",
+    return rx.auto_scroll(
+        rx.foreach(
+            State.chats[State.current_chat],
+            message,
+        ),
         flex="1",
-        width="100%",
-        max_width="50em",
-        padding_x="4px",
-        align_self="center",
-        overflow="hidden",
-        padding_bottom="5em",
+        padding="8px",
     )
 
 
@@ -61,34 +65,31 @@ def action_bar() -> rx.Component:
     """The action bar to send a new message."""
     return rx.center(
         rx.vstack(
-            rc.form(
-                rc.form_control(
-                    rx.hstack(
-                        rx.input(
-                            rx.input.slot(
-                                rx.tooltip(
-                                    rx.icon("info", size=18),
-                                    content="Enter a question to get a response.",
-                                )
-                            ),
-                            placeholder="Type something...",
-                            id="question",
-                            width=["15em", "20em", "45em", "50em", "50em", "50em"],
+            rx.form(
+                rx.hstack(
+                    rx.input(
+                        rx.input.slot(
+                            rx.tooltip(
+                                rx.icon("info", size=18),
+                                content="Enter a question to get a response.",
+                            )
                         ),
-                        rx.button(
-                            rx.cond(
-                                State.processing,
-                                loading_icon(height="1em"),
-                                rx.text("Send"),
-                            ),
-                            type="submit",
-                        ),
-                        align_items="center",
+                        placeholder="Type something...",
+                        id="question",
+                        disabled=State.processing,
+                        flex="1",
                     ),
-                    is_disabled=State.processing,
+                    rx.button(
+                        "Send",
+                        loading=State.processing,
+                        disabled=State.processing,
+                        type="submit",
+                    ),
+                    max_width="50em",
+                    margin="0 auto",
+                    align_items="center",
                 ),
-                on_submit=State.process_question,
-                reset_on_submit=True,
+                on_submit=[State.process_question, rx.set_value("question", "")],
             ),
             rx.text(
                 "ReflexGPT may return factually incorrect or misleading responses. Use discretion.",
@@ -96,8 +97,10 @@ def action_bar() -> rx.Component:
                 font_size=".75em",
                 color=rx.color("mauve", 10),
             ),
-            rx.logo(margin_top="-1em", margin_bottom="-1em"),
-            align_items="center",
+            rx.logo(margin_block="-1em"),
+            width="100%",
+            padding_x="16px",
+            align="stretch",
         ),
         position="sticky",
         bottom="0",
@@ -107,6 +110,6 @@ def action_bar() -> rx.Component:
         backdrop_blur="lg",
         border_top=f"1px solid {rx.color('mauve', 3)}",
         background_color=rx.color("mauve", 2),
-        align_items="stretch",
+        align="stretch",
         width="100%",
     )

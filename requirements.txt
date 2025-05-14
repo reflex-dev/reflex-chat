@@ -1,3 +1,2 @@
-reflex>=0.4.7
-openai>=1.14.0
-reflex-chakra>=0.6.0
+reflex>=0.7.11
+openai>=1.78.1
