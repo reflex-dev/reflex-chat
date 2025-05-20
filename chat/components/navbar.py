@@ -19,7 +19,7 @@ def sidebar_chat(chat: str) -> rx.Component:
             rx.button(
                 rx.icon(
                     tag="trash",
-                    on_click=State.delete_chat,
+                    on_click=State.delete_chat(chat),
                     stroke_width=1,
                 ),
                 width="20%",
@@ -27,7 +27,8 @@ def sidebar_chat(chat: str) -> rx.Component:
                 color_scheme="red",
             ),
             width="100%",
-        )
+        ),
+        key=chat,
     )
 
 
