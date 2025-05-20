@@ -52,10 +52,7 @@ def message(qa: QA) -> rx.Component:
 def chat() -> rx.Component:
     """List all the messages in a single conversation."""
     return rx.auto_scroll(
-        rx.foreach(
-            State.chats[State.current_chat],
-            message,
-        ),
+        rx.foreach(State.selected_chat, message),
         flex="1",
         padding="8px",
     )
