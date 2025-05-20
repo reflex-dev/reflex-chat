@@ -64,25 +64,25 @@ def modal(trigger) -> rx.Component:
     return rx.dialog.root(
         rx.dialog.trigger(trigger),
         rx.dialog.content(
-            rx.hstack(
-                rx.input(
-                    placeholder="Chat name",
-                    on_blur=State.set_new_chat_name,
-                    flex="1",
-                    min_width="20ch",
-                ),
-                rx.dialog.close(
-                    rx.button(
-                        "Create chat",
-                        on_click=State.create_chat,
+            rx.form(
+                rx.hstack(
+                    rx.input(
+                        placeholder="Chat name",
+                        name="new_chat_name",
+                        flex="1",
+                        min_width="20ch",
                     ),
+                    rx.button("Create chat"),
+                    spacing="2",
+                    wrap="wrap",
+                    width="100%",
                 ),
-                spacing="2",
-                wrap="wrap",
-                width="100%",
+                on_submit=State.create_chat,
             ),
             background_color=rx.color("mauve", 1),
         ),
+        open=State.is_modal_open,
+        on_open_change=State.set_is_modal_open,
     )
 
 
