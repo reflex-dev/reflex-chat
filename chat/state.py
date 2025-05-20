@@ -30,15 +30,26 @@ class State(rx.State):
     # Whether we are processing the question.
     processing: bool = False
 
-    # The name of the new chat.
-    new_chat_name: str = ""
+    # Whether the new chat modal is open.
+    is_modal_open: bool = False
 
     @rx.event
-    def create_chat(self):
+    def create_chat(self, form_data: dict[str, Any]):
         """Create a new chat."""
         # Add the new chat to the list of chats.
-        self.current_chat = self.new_chat_name
-        self._chats[self.new_chat_name] = []
+        new_chat_name = form_data["new_chat_name"]
+        self.current_chat = new_chat_name
+        self._chats[new_chat_name] = []
+        self.is_modal_open = False
+
+    @rx.event
+    def set_is_modal_open(self, is_open: bool):
+        """Set the new chat modal open state.
+
+        Args:
+            is_open: Whether the modal is open.
+        """
+        self.is_modal_open = is_open
 
     @rx.var
     def selected_chat(self) -> list[QA]:
@@ -97,7 +108,7 @@ class State(rx.State):
         question = form_data["question"]
 
         # Check if the question is empty
-        if question == "":
+        if not question:
             return
 
         async for value in self.openai_process_question(question):
