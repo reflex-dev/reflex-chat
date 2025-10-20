@@ -1,12 +1,12 @@
 import os
 from typing import Any, TypedDict
 import reflex as rx
-from openai import OpenAI
-from openai.types.chat import ChatCompletionMessageParam
+from chat.llm_providers import LLMProviderFactory, Message
 
-# Checking if the API key is set properly
-if not os.getenv("OPENAI_API_KEY"):
-    raise Exception("Please set OPENAI_API_KEY environment variable.")
+# Load environment variables from .env file
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 class QA(TypedDict):
@@ -32,6 +32,28 @@ class State(rx.State):
 
     # Whether the new chat modal is open.
     is_modal_open: bool = False
+
+    # LLM Provider configuration
+    current_provider: str = os.getenv("LLM_PROVIDER", "openai")
+    current_model: str = ""
+    provider_error: str = ""
+    _provider_instance = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._initialize_provider()
+
+    def _initialize_provider(self):
+        """Initialize the LLM provider."""
+        try:
+            self._provider_instance = LLMProviderFactory.create_provider(
+                self.current_provider
+            )
+            self.current_model = self._provider_instance.get_default_model()
+            self.provider_error = ""
+        except Exception as e:
+            self.provider_error = str(e)
+            self._provider_instance = None
 
     @rx.event
     def create_chat(self, form_data: dict[str, Any]):
@@ -111,60 +133,74 @@ class State(rx.State):
         if not question:
             return
 
-        async for value in self.openai_process_question(question):
+        async for value in self.llm_process_question(question):
             yield value
 
     @rx.event
-    async def openai_process_question(self, question: str):
-        """Get the response from the API.
+    async def llm_process_question(self, question: str):
+        """Process the question using the configured LLM provider."""
+        try:
+            # Check if provider is available
+            if self._provider_instance is None:
+                self.provider_error = "No LLM provider configured. Please check your environment variables."
+                # Add error message to chat
+                qa = QA(question=question, answer=f"Error: {self.provider_error}")
+                self._chats[self.current_chat].append(qa)
+                yield
+                return
 
-        Args:
-            form_data: A dict with the current question.
-        """
+            # Add the question to the list of questions.
+            qa = QA(question=question, answer="")
+            self._chats[self.current_chat].append(qa)
 
-        # Add the question to the list of questions.
-        qa = QA(question=question, answer="")
-        self._chats[self.current_chat].append(qa)
+            # Clear the input and start the processing.
+            self.processing = True
+            self.provider_error = ""
+            yield
 
-        # Clear the input and start the processing.
-        self.processing = True
-        yield
+            # Build the messages for the provider.
+            messages = self._build_messages()
 
-        # Build the messages.
-        messages: list[ChatCompletionMessageParam] = [
-            {
-                "role": "system",
-                "content": "You are a friendly chatbot named Reflex. Respond in markdown.",
-            }
-        ]
-        for qa in self._chats[self.current_chat]:
-            messages.append({"role": "user", "content": qa["question"]})
-            messages.append({"role": "assistant", "content": qa["answer"]})
+            # Initialize provider if needed
+            await self._provider_instance.initialize()
 
-        # Remove the last mock answer.
-        messages = messages[:-1]
-
-        # Start a new session to answer the question.
-        session = OpenAI().chat.completions.create(
-            model=os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"),
-            messages=messages,
-            stream=True,
-        )
-
-        # Stream the results, yielding after every word.
-        for item in session:
-            if hasattr(item.choices[0].delta, "content"):
-                answer_text = item.choices[0].delta.content
-                # Ensure answer_text is not None before concatenation
-                if answer_text is not None:
-                    self._chats[self.current_chat][-1]["answer"] += answer_text
-                else:
-                    # Handle the case where answer_text is None, perhaps log it or assign a default value
-                    # For example, assigning an empty string if answer_text is None
-                    answer_text = ""
-                    self._chats[self.current_chat][-1]["answer"] += answer_text
-                self._chats = self._chats
+            # Stream the response from the provider
+            async for chunk in self._provider_instance.stream_chat(
+                messages=messages, model=self.current_model
+            ):
+                self._chats[self.current_chat][-1]["answer"] += chunk
+                self._chats = self._chats  # Trigger reactivity
                 yield
 
-        # Toggle the processing flag.
-        self.processing = False
+        except Exception as e:
+            self.provider_error = f"LLM processing error: {str(e)}"
+            # Add error message to the chat
+            if self._chats[self.current_chat]:
+                self._chats[self.current_chat][-1]["answer"] = f"Error: {str(e)}"
+                self._chats = self._chats
+            yield
+
+        finally:
+            # Toggle the processing flag.
+            self.processing = False
+
+    def _build_messages(self) -> list[Message]:
+        """Build the message list from chat history."""
+        messages = [
+            Message(
+                role="system",
+                content="You are a friendly chatbot named Reflex. Respond in markdown.",
+            )
+        ]
+
+        # Add conversation history
+        for qa in self._chats[self.current_chat]:
+            messages.append(Message(role="user", content=qa["question"]))
+            if qa["answer"]:  # Only add assistant messages that have content
+                messages.append(Message(role="assistant", content=qa["answer"]))
+
+        # Remove the last empty assistant message (the one we're currently filling)
+        if messages and messages[-1].role == "assistant" and not messages[-1].content:
+            messages = messages[:-1]
+
+        return messages
