@@ -84,22 +84,3 @@ class LLMProviderFactory:
     def get_supported_providers(cls) -> List[str]:
         """Get list of supported provider names."""
         return list(cls.SUPPORTED_PROVIDERS.keys())
-
-    @classmethod
-    async def get_available_providers(cls) -> Dict[str, bool]:
-        """
-        Check which providers are available and properly configured.
-
-        Returns:
-            Dict[str, bool]: Mapping of provider names to availability status
-        """
-        availability = {}
-
-        for provider_name in cls.SUPPORTED_PROVIDERS.keys():
-            try:
-                provider = cls.create_provider(provider_name)
-                availability[provider_name] = await provider.health_check()
-            except Exception:
-                availability[provider_name] = False
-
-        return availability

@@ -1,5 +1,4 @@
 from typing import AsyncGenerator, List, Dict, Any
-import asyncio
 from openai import OpenAI
 from openai.types.chat import ChatCompletionMessageParam
 from .base import LLMProvider, Message
@@ -18,29 +17,6 @@ class OpenAIProvider(LLMProvider):
             raise ValueError("OpenAI API key is required")
 
         self.client = OpenAI(api_key=self.config["api_key"])
-
-    async def get_available_models(self) -> List[str]:
-        """Get list of available OpenAI models."""
-        if self.client is None:
-            await self.initialize()
-
-        try:
-            # Fetch available models from OpenAI API
-            models = await asyncio.get_event_loop().run_in_executor(
-                None, lambda: self.client.models.list()
-            )
-
-            # Filter for chat completion models
-            chat_models = [
-                model.id
-                for model in models.data
-                if model.id.startswith(("gpt-", "chatgpt-"))
-                and "chat" in model.id.lower()
-            ]
-            return sorted(chat_models)
-        except Exception:
-            # If API call fails, return empty list - user must specify model manually
-            return []
 
     async def stream_chat(
         self, messages: List[Message], model: str = None

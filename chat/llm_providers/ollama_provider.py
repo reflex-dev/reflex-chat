@@ -1,5 +1,4 @@
 from typing import AsyncGenerator, List, Dict, Any
-import asyncio
 from .base import LLMProvider, Message
 
 
@@ -31,21 +30,6 @@ class OllamaProvider(LLMProvider):
             raise Exception(
                 f"Failed to connect to Ollama at {self.config.get('host')}: {str(e)}"
             )
-
-    async def get_available_models(self) -> List[str]:
-        """Get list of available local Ollama models."""
-        if self.client is None:
-            await self.initialize()
-
-        try:
-            # Run in thread pool to avoid blocking
-            models = await asyncio.get_event_loop().run_in_executor(
-                None, self.client.list
-            )
-            return [model["name"] for model in models.get("models", [])]
-        except Exception:
-            # If API call fails, return empty list - user must specify model manually
-            return []
 
     async def stream_chat(
         self, messages: List[Message], model: str = None
@@ -131,15 +115,6 @@ class OllamaProvider(LLMProvider):
             errors.append("OLLAMA_MODEL must be a valid string")
 
         return errors
-
-    async def health_check(self) -> bool:
-        """Check if Ollama is accessible and has models."""
-        try:
-            await self.initialize()
-            models = await self.get_available_models()
-            return len(models) > 0
-        except Exception:
-            return False
 
     def _convert_messages_to_ollama_format(
         self, messages: List[Message]

@@ -26,11 +26,6 @@ class LLMProvider(ABC):
         pass
 
     @abstractmethod
-    async def get_available_models(self) -> List[str]:
-        """Get list of available models for this provider."""
-        pass
-
-    @abstractmethod
     async def stream_chat(
         self, messages: List[Message], model: str = None
     ) -> AsyncGenerator[str, None]:
@@ -66,12 +61,3 @@ class LLMProvider(ABC):
     ) -> List[Dict[str, str]]:
         """Convert standardized messages to provider-specific format."""
         return [msg.to_dict() for msg in messages]
-
-    async def health_check(self) -> bool:
-        """Check if the provider is accessible and properly configured."""
-        try:
-            await self.initialize()
-            models = await self.get_available_models()
-            return len(models) > 0
-        except Exception:
-            return False
