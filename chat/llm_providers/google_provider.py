@@ -38,19 +38,6 @@ class GoogleGenAIProvider(LLMProvider):
             # Use Developer API
             self.client = genai.Client(api_key=self.config["api_key"])
 
-    async def get_available_models(self) -> List[str]:
-        """Get list of available Google Gemini models."""
-        if self.client is None:
-            await self.initialize()
-
-        try:
-            # Try to get models from the API if available
-            # Note: Google GenAI may not have a public list models API
-            # For now, return empty list - user must specify model manually
-            return []
-        except Exception:
-            return []
-
     async def stream_chat(
         self, messages: List[Message], model: str = None
     ) -> AsyncGenerator[str, None]:
@@ -76,30 +63,28 @@ class GoogleGenAIProvider(LLMProvider):
         try:
             # Use async client for streaming
             async with self.client.aio as aclient:
-                response = await aclient.models.generate_content(
+                response_stream = await aclient.models.generate_content_stream(
                     model=model,
                     contents=gemini_messages,
                 )
 
-                # Stream the response
-                if hasattr(response, "text"):
-                    # If response is complete, yield all at once
-                    yield response.text
-                else:
-                    # Try to stream if available
-                    async for chunk in response:
-                        if hasattr(chunk, "text") and chunk.text:
-                            yield chunk.text
+                # Stream the response chunks
+                async for chunk in response_stream:
+                    if hasattr(chunk, "text") and chunk.text:
+                        yield chunk.text
 
         except Exception as e:
-            # Fallback to sync client
+            # Fallback to sync streaming client
             try:
-                response = self.client.models.generate_content(
+                response_stream = self.client.models.generate_content_stream(
                     model=model,
                     contents=gemini_messages,
                 )
-                if hasattr(response, "text"):
-                    yield response.text
+
+                # Stream the response chunks
+                for chunk in response_stream:
+                    if hasattr(chunk, "text") and chunk.text:
+                        yield chunk.text
             except Exception as fallback_error:
                 raise Exception(
                     f"Google GenAI streaming error: {str(e)} (fallback: {str(fallback_error)})"
