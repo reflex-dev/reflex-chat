@@ -1,5 +1,6 @@
 import reflex as rx
 from chat.state import State
+from chat.components.provider_selector import provider_status_bar
 
 
 def sidebar_chat(chat: str) -> rx.Component:
@@ -98,6 +99,7 @@ def navbar():
             variant="soft",
             margin_inline_end="auto",
         ),
+        provider_status_bar(),
         modal(
             rx.icon_button("message-square-plus"),
         ),

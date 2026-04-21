@@ -1,0 +1,13 @@
+[project]
+name = "reflex-chat"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "google-genai>=1.0.0",
+    "ollama>=0.1.0",
+    "openai>=1.78.1",
+    "python-dotenv>=1.0.0",
+    "reflex>=0.7.11",
+]
